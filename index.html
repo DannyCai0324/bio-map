@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>生物地圖</title>
+<title>翊の生物</title>
 <style>
 :root{
   color-scheme: light;
@@ -261,13 +261,13 @@ textarea{width:100%;min-height:150px;font-family:ui-monospace,SFMono-Regular,Men
 <meta name="theme-color" content="#f3ece1">
 <link rel="apple-touch-icon" href="icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="生物地圖">
+<meta name="apple-mobile-web-app-title" content="翊の生物">
 </head>
 <body>
 <div class="wrap">
 
 <header>
-  <h1>生物地圖</h1>
+  <h1>翊の生物</h1>
   <span class="sub">9 大主題 · 50 個要點</span>
   <span class="spacer"></span>
   <button class="ghost" id="theme">◐ 主題</button>
@@ -284,9 +284,10 @@ textarea{width:100%;min-height:150px;font-family:ui-monospace,SFMono-Regular,Men
 
 <!-- ============ LEARN（講義列表） ============ -->
 <section id="v-learn" hidden>
+  <button class="ghost" id="learnBack" style="margin-bottom:12px" hidden>‹ 返回主題</button>
   <div class="card">
-    <h2>課堂講義</h2>
-    <p class="hint">先讀懂，再練習。每篇講義讀完可以直接練那個要點，答對率會顯示在右邊。</p>
+    <h2 id="learnTitle">課堂講義</h2>
+    <p class="hint" id="learnHint">先讀懂，再練習。選一個主題進去看該主題的講義。</p>
     <div id="lessonList"></div>
   </div>
 </section>
@@ -569,6 +570,7 @@ function rate(p){const r=progress[p]; if(!r||!r.a) return null; return Math.roun
 function band(v){ if(v===null) return 'none'; if(v<40)return'crit'; if(v<60)return'ser'; if(v<80)return'warn'; return'good';}
 
 /* ---------- 視圖切換 ---------- */
+let CURVIEW='learn';
 function show(v){
   ['learn','lesson','deep','deeparticle','setup','quiz','result','dash','wrong','data'].forEach(x=>{
     const el=$('#v-'+x); if(el) el.hidden = (x!==v);
@@ -576,13 +578,55 @@ function show(v){
   // lesson 是 learn 的子頁，分頁鈕維持在「學習」高亮
   const tabv = v==='lesson'?'learn' : v==='deeparticle'?'deep' : v;
   $$('.tabs button').forEach(b=>b.setAttribute('aria-selected', b.dataset.view===tabv));
+  CURVIEW=v;
   if(v==='learn') renderLearn();
   if(v==='deep') renderDeep();
   if(v==='dash') renderHeat();
   if(v==='wrong') renderWrong();
   if(v==='data') renderData();
+  navPush();
 }
-$$('.tabs button').forEach(b=>b.onclick=()=>show(b.dataset.view));
+
+/* ---------- 手機返回鍵 / 瀏覽器上一頁 ---------- */
+let NAV_POP=false, NAV_READY=false, NAV_DEPTH=0;
+function navSnap(){
+  return {view:CURVIEW, topic:learnTopic, lesson:currentLessonPt, deep:currentDeep};
+}
+function navPush(){
+  if(NAV_POP || !NAV_READY) return;
+  const s=navSnap();
+  const cur=history.state;
+  // 同一個畫面不重複堆疊
+  if(cur && cur.view===s.view && cur.topic===s.topic && cur.lesson===s.lesson && cur.deep===s.deep) return;
+  NAV_DEPTH++;
+  history.pushState(Object.assign(s,{depth:NAV_DEPTH}), '');
+}
+function navApply(s){
+  NAV_POP=true;
+  try{
+    s = s || {view:'learn', topic:null, depth:0};
+    NAV_DEPTH = s.depth || 0;
+    learnTopic = s.topic || null;
+    if(s.view==='lesson' && s.lesson) openLesson(s.lesson);
+    else if(s.view==='deeparticle' && s.deep) openDeep(s.deep);
+    else show(s.view || 'learn');
+  } finally { NAV_POP=false; }
+}
+addEventListener('popstate', e=>navApply(e.state));
+// 畫面內的「返回」鈕＝按手機返回鍵，兩者共用同一套歷史
+function goBack(){
+  if((history.state && history.state.depth || 0) > 0) history.back();
+  else { learnTopic=null; show('learn'); }
+}
+function navInit(){
+  NAV_READY=true; NAV_DEPTH=0;
+  history.replaceState(Object.assign(navSnap(),{depth:0}), '');
+}
+
+$$('.tabs button').forEach(b=>b.onclick=()=>{
+  if(b.dataset.view==='learn') learnTopic=null;   // 從上方分頁進來一律回到主題清單
+  show(b.dataset.view);
+});
 $('#theme').onclick=()=>{
   const r=document.documentElement;
   r.dataset.theme = r.dataset.theme==='dark'?'light':'dark';
@@ -784,7 +828,7 @@ function renderHeat(){
     }).join('')}</div></div>`).join('');
 }
 /* ---------- 進度備份 ---------- */
-function snapshot(){ return {app:'生物地圖', v:1, at:new Date().toISOString(), progress, wrongBook, lessonsSeen}; }
+function snapshot(){ return {app:'翊の生物', v:1, at:new Date().toISOString(), progress, wrongBook, lessonsSeen}; }
 function pmsg(ok,t){ $('#progMsg').className='msg '+(ok?'ok':'err'); $('#progMsg').textContent=t; }
 function digest(d){
   const pr=d.progress||{};
@@ -897,12 +941,42 @@ let LESSONS = window.__LESSONS__ || [];
 const LByPoint = {};
 function indexLessons(){ LESSONS.forEach(l=>LByPoint[l.point]=l); }
 
+let learnTopic=null;              // null＝顯示主題清單；'T1'＝顯示該主題的講義
+function lessonRow(pt){
+  const l=LByPoint[pt]; const p=PT[pt]||{name:pt};
+  const r=rate(pt); const seen=lessonsSeen[pt];
+  const right = r===null ? '尚未練習' : `練習正確率 ${r}%`;
+  return `<div class="lrow" data-pt="${pt}">
+    <div class="ic">${seen?'✓':'📖'}</div>
+    <div class="lt"><b>${l.title}</b><span>${p.name} · 約 ${l.minutes} 分鐘${seen?' · 已讀':''}</span></div>
+    <div class="rt">${right}</div></div>`;
+}
 function renderLearn(){
   indexLessons();
   const host=$('#lessonList');
   if(!LESSONS.length){ host.innerHTML='<p class="empty">目前還沒有講義。</p>'; return; }
+
+  // ---- 第二層：某個主題底下的講義 ----
+  if(learnTopic){
+    const t=TOPICS.find(x=>x.id===learnTopic);
+    const rows=t.points.filter(p=>LByPoint[p.id]);
+    $('#learnBack').hidden=false;
+    $('#learnTitle').textContent=t.name;
+    const done=rows.filter(p=>lessonsSeen[p.id]).length;
+    $('#learnHint').textContent=`共 ${rows.length} 篇講義，已讀 ${done} 篇。讀完可以直接練該要點。`;
+    host.innerHTML=rows.map(p=>lessonRow(p.id)).join('');
+    host.querySelectorAll('.lrow').forEach(el=>el.onclick=()=>openLesson(el.dataset.pt));
+    window.scrollTo(0,0);
+    return;
+  }
+
+  // ---- 第一層：九大主題 ----
+  $('#learnBack').hidden=true;
+  $('#learnTitle').textContent='課堂講義';
+  const totalSeen=LESSONS.filter(l=>lessonsSeen[l.point]).length;
+  $('#learnHint').textContent=`50 篇講義、9 大主題，已讀 ${totalSeen} 篇。選一個主題進去看。`;
+
   let html='';
-  // 複習推薦：讀過但正確率偏低，或讀過還沒練
   const due=LESSONS.filter(l=>{
     if(!lessonsSeen[l.point]) return false;
     const r=rate(l.point);
@@ -910,31 +984,36 @@ function renderLearn(){
   });
   if(due.length){
     html+=`<div class="lgrouphd" style="color:var(--accent);margin-top:0">🔁 該複習了</div>`;
-    due.forEach(l=>{
+    due.slice(0,5).forEach(l=>{
       const p=PT[l.point]||{name:l.point}; const r=rate(l.point);
       html+=`<div class="lrow" data-pt="${l.point}">
         <div class="ic" style="background:var(--accent);color:var(--on-accent)">!</div>
         <div class="lt"><b>${l.title}</b><span>${p.name} · ${r===null?'讀過但還沒練習':'正確率僅 '+r+'%'}</span></div>
         <div class="rt">去複習</div></div>`;
     });
+    if(due.length>5) html+=`<div class="lgrouphd" style="margin-top:6px">還有 ${due.length-5} 篇待複習，在各主題裡</div>`;
+    html+=`<div class="lgrouphd">全部主題</div>`;
   }
-  TOPICS.forEach(t=>{
+  TOPICS.forEach((t,i)=>{
     const rows=t.points.filter(p=>LByPoint[p.id]);
     if(!rows.length) return;
-    html+=`<div class="lgrouphd">${t.name}</div>`;
-    rows.forEach(p=>{
-      const l=LByPoint[p.id]; const r=rate(p.id); const seen=lessonsSeen[p.id];
-      const right = r===null ? '尚未練習' : `練習正確率 ${r}%`;
-      html+=`<div class="lrow" data-pt="${p.id}">
-        <div class="ic">${seen?'✓':'📖'}</div>
-        <div class="lt"><b>${l.title}</b><span>${p.name} · 約 ${l.minutes} 分鐘${seen?' · 已讀':''}</span></div>
-        <div class="rt ${r!==null&&r<60?'':''}">${right}</div>
-      </div>`;
-    });
+    const done=rows.filter(p=>lessonsSeen[p.id]).length;
+    const nq=QUESTIONS.filter(q=>q.primary_point && q.primary_point.split('-')[0]===t.id).length;
+    const all=done===rows.length && rows.length>0;
+    html+=`<div class="lrow" data-topic="${t.id}">
+      <div class="ic" style="${all?'background:var(--accent);color:var(--on-accent)':''}">${all?'✓':i+1}</div>
+      <div class="lt"><b>${t.name}</b><span>${rows.length} 篇講義 · ${nq} 題</span></div>
+      <div class="rt">${all?'已讀完':done?`已讀 ${done}/${rows.length}`:'尚未開始'}</div></div>`;
   });
   host.innerHTML=html;
-  host.querySelectorAll('.lrow').forEach(el=>el.onclick=()=>openLesson(el.dataset.pt));
+  host.querySelectorAll('.lrow').forEach(el=>{
+    el.onclick=()=>{
+      if(el.dataset.topic){ learnTopic=el.dataset.topic; renderLearn(); navPush(); }
+      else openLesson(el.dataset.pt);
+    };
+  });
 }
+$('#learnBack').onclick=()=>goBack();
 
 function blockHTML(b){
   if(b.type==='analogy') return `<div class="lcard analogy"><div class="h">${b.icon||'💡'} ${b.title||'打個比方'}</div>${b.body}</div>`;
@@ -982,7 +1061,7 @@ function openLesson(pt){
   lessonsSeen[pt]=true; saveLocal();
   show('lesson'); window.scrollTo(0,0);
 }
-$('#lessonBack').onclick=()=>show('learn');
+$('#lessonBack').onclick=()=>goBack();
 $('#lessonPractice').onclick=()=>{
   // 學練閉環：帶著這個要點跳到練習
   state.scope=new Set([currentLessonPt]); state.mode='exam';
@@ -1041,7 +1120,7 @@ function openDeep(id){
   lessonsSeen['deep:'+id]=true; saveLocal();
   show('deeparticle'); window.scrollTo(0,0);
 }
-$('#deepBack').onclick=()=>show('deep');
+$('#deepBack').onclick=()=>goBack();
 $('#deepToLesson').onclick=()=>{ if(currentDeep&&currentDeep.related_point) openLesson(currentDeep.related_point); };
 
 /* ---------- 啟動 ---------- */
@@ -1056,6 +1135,7 @@ QUESTIONS = window.__SEED__;
 LESSONS = window.__LESSONS__;
 DEEP = window.__DEEP__;
 indexLessons(); renderTree(); updatePool(); show('learn');
+navInit();          // 起始畫面設為歷史起點，之後才開始堆疊
 </script>
 <script>
 if ('serviceWorker' in navigator) {
