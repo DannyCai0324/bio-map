@@ -167,6 +167,9 @@ textarea{width:100%;min-height:150px;font-family:ui-monospace,SFMono-Regular,Men
 .lrow .lt b{display:block;font-size:15px;font-weight:700;line-height:1.4;letter-spacing:-.01em}
 .lrow .lt span{font-size:12px;color:var(--muted)}
 .lrow .rt{font-size:11.5px;color:var(--muted);text-align:right;flex:none;font-variant-numeric:tabular-nums}
+.sechd{font-size:13px;color:var(--ink-2);font-weight:700;margin:14px 0 2px;display:flex;gap:7px;align-items:baseline}
+.sechd .sn{color:var(--accent);font-size:11.5px;font-weight:800;font-variant-numeric:tabular-nums}
+.secempty{font-size:12px;color:var(--muted);padding:9px 2px;border-top:1px solid var(--grid)}
 .chp{font-size:11.5px;color:var(--muted);font-weight:700;margin:9px 0 2px;padding-left:2px}
 .lgrouphd{font-size:12px;color:var(--muted);font-weight:700;margin:20px 0 3px;letter-spacing:.04em}
 
@@ -539,38 +542,121 @@ const TOPICS = [
 
 const VOLUMES=[
  {id:'V0',name:'必修生物',tag:'必',sub:'全一冊 · 高一',chapters:[
-   {name:'第1章 細胞的構造與功能',points:['T1-P1','T1-P2','T1-P3','T1-P4','T2-P2','T2-P3','T2-P4']},
-   {name:'第2章 生殖與遺傳',points:['T3-P1','T3-P2','T4-P1','T4-P3','T4-P4','T4-P5','T4-P6']},
-   {name:'第3章 演化與生物多樣性',points:['T7-P1','T7-P2','T7-P5','T8-P5']},
+   {name:'第1章 細胞的構造與功能',sections:[
+     {no:'1-1',name:'細胞的構造',points:['T1-P1','T1-P2','T1-P3']},
+     {no:'1-2',name:'細胞與能量',points:['T2-P2','T2-P3','T2-P4']},
+     {no:'1-3',name:'染色體與細胞分裂',points:['T1-P4']},
+   ]},
+   {name:'第2章 生殖與遺傳',sections:[
+     {no:'2-1',name:'性狀的遺傳',points:['T3-P1']},
+     {no:'2-2',name:'遺傳物質',points:['T4-P1','T4-P2','T4-P3','T4-P4']},
+     {no:'2-3',name:'基因轉殖技術及其應用',points:['T4-P6']},
+   ]},
+   {name:'第3章 演化與生物多樣性',sections:[
+     {no:'3-1',name:'生物的演化',points:['T7-P2']},
+     {no:'3-2',name:'生命樹',points:['T7-P5']},
+     {no:'3-3',name:'生物多樣性',points:['T8-P5']},
+   ]},
  ]},
  {id:'V1',name:'選修生物Ⅰ',tag:'Ⅰ',sub:'細胞與遺傳分子 · 高二上',chapters:[
-   {name:'第1章 細胞的特性',points:['T1-P1','T1-P2','T1-P3']},
-   {name:'第2章 細胞代謝與能量',points:['T2-P1','T2-P2','T2-P3','T2-P4','T2-P5']},
-   {name:'第3章 從染色體到 DNA',points:['T1-P4','T3-P1','T3-P2','T4-P1','T4-P2']},
-   {name:'第4章 DNA 與生物科技',points:['T4-P3','T4-P4','T4-P5','T4-P6']},
+   {name:'第1章 細胞的特性',sections:[
+     {no:'1-1',name:'細胞的分子組成',points:['T1-P2']},
+     {no:'1-2',name:'細胞的構造與功能',points:['T1-P1','T1-P3']},
+     {no:'1-3',name:'細胞的生命歷程',points:['T1-P4']},
+   ]},
+   {name:'第2章 細胞代謝與能量',sections:[
+     {no:'2-1',name:'細胞的代謝作用',points:['T2-P1','T2-P2']},
+     {no:'2-2',name:'細胞的能量來源',points:['T2-P3']},
+     {no:'2-3',name:'生能量的來源、流轉與使用',points:['T2-P5']},
+   ]},
+   {name:'第3章 從染色體到 DNA',sections:[
+     {no:'3-1',name:'遺傳染色體學說驗證',points:['T3-P1','T3-P2']},
+     {no:'3-2',name:'攜帶遺傳訊息的分子',points:['T4-P1']},
+     {no:'3-3',name:'DNA 的結構',points:['T4-P2']},
+   ]},
+   {name:'第4章 DNA 與生物科技',sections:[
+     {no:'4-1',name:'DNA 複製',points:['T4-P3']},
+     {no:'4-2',name:'基因的表現',points:['T4-P4']},
+     {no:'4-3',name:'基因表現的調控',points:[]},
+     {no:'4-4',name:'遺傳變異',points:['T4-P5']},
+     {no:'4-5',name:'生物科技',points:['T4-P6']},
+   ]},
  ]},
  {id:'V3',name:'選修生物Ⅲ',tag:'Ⅲ',sub:'動物體的構造與功能 · 高三上',chapters:[
-   {name:'第1章 動物體的組成與恆定',points:['T6-P1']},
-   {name:'第2章 循環與消化',points:['T6-P2','T6-P3']},
-   {name:'第3章 呼吸與排泄',points:['T6-P4','T6-P5']},
-   {name:'第4章 神經、內分泌與免疫',points:['T6-P6','T6-P7','T6-P8']},
-   {name:'第5章 生殖與胚胎發育',points:['T6-P9']},
+   {name:'第1章 動物體的組成與恆定',sections:[
+     {no:'1-1',name:'動物體的組成',points:['T6-P1']},
+     {no:'1-2',name:'恆定',points:['T6-P1']},
+   ]},
+   {name:'第2章 循環與消化',sections:[
+     {no:'2-1',name:'循環系統',points:['T6-P2']},
+     {no:'2-2',name:'消化系統',points:['T6-P3']},
+   ]},
+   {name:'第3章 呼吸與排泄',sections:[
+     {no:'3-1',name:'呼吸系統',points:['T6-P4']},
+     {no:'3-2',name:'排泄作用',points:['T6-P5']},
+   ]},
+   {name:'第4章 神經、內分泌與免疫',sections:[
+     {no:'4-1',name:'神經系統',points:['T6-P6']},
+     {no:'4-2',name:'內分泌系統',points:['T6-P7']},
+     {no:'4-3',name:'免疫系統',points:['T6-P8']},
+   ]},
+   {name:'第5章 生殖與胚胎發育',sections:[
+     {no:'5-1',name:'生殖系統',points:['T6-P9']},
+     {no:'5-2',name:'胚胎發育',points:['T6-P9']},
+   ]},
  ]},
  {id:'V2',name:'選修生物Ⅱ',tag:'Ⅱ',sub:'演化與植物 · 高二下',chapters:[
-   {name:'第1章 生物的起源與演化',points:['T7-P1','T7-P2']},
-   {name:'第2章 植物體的形態、構造與功能',points:['T5-P1','T5-P2']},
-   {name:'第3章 植物體物質的吸收、合成與運輸',points:['T5-P3']},
-   {name:'第4章 植物的生殖、生長和發育',points:['T5-P4','T5-P5','T5-P6','T5-P7']},
+   {name:'第1章 生物的起源與演化',sections:[
+     {no:'1-1',name:'生物起源的主要假說',points:['T7-P1']},
+     {no:'1-2',name:'生物起源的過程',points:['T7-P1']},
+     {no:'1-3',name:'生命型式的演化歷程',points:['T7-P1']},
+   ]},
+   {name:'第2章 植物體的形態、構造與功能',sections:[
+     {no:'2-1',name:'植物體的組成層次',points:['T5-P1']},
+     {no:'2-2',name:'植物的營養構造與功能',points:['T5-P2']},
+   ]},
+   {name:'第3章 植物體物質的吸收、合成與運輸',sections:[
+     {no:'3-1',name:'水和無機鹽的吸收與運輸',points:['T5-P3']},
+     {no:'3-2',name:'光合作用',points:['T2-P4']},
+     {no:'3-3',name:'有機養分的運輸',points:['T5-P3']},
+   ]},
+   {name:'第4章 植物的生殖、生長和發育',sections:[
+     {no:'4-1',name:'植物的生殖',points:['T5-P4']},
+     {no:'4-2',name:'種子的萌發與幼苗的生長',points:['T5-P5']},
+     {no:'4-3',name:'植物激素',points:['T5-P6']},
+     {no:'4-4',name:'植物對環境刺激的反應',points:['T5-P7']},
+   ]},
  ]},
  {id:'V4',name:'選修生物Ⅳ',tag:'Ⅳ',sub:'演化、生態與多樣性 · 高三下',chapters:[
-   {name:'第1章 生物的演化',points:['T4-P5','T7-P3','T7-P4']},
-   {name:'第2章 生物與環境',points:['T8-P1','T8-P2','T8-P3','T8-P4','T2-P5']},
-   {name:'第3章 生物多樣性與保育',points:['T8-P5','T8-P6']},
+   {name:'第1章 生物的演化',sections:[
+     {no:'1-1',name:'遺傳變異與演化',points:['T4-P5','T7-P2']},
+     {no:'1-2',name:'族群遺傳',points:['T7-P3']},
+     {no:'1-3',name:'現代演化理論的發展',points:['T7-P3']},
+     {no:'1-4',name:'物種的形成',points:['T7-P4']},
+   ]},
+   {name:'第2章 生物與環境',sections:[
+     {no:'2-1',name:'族群與群集',points:['T8-P1','T8-P2']},
+     {no:'2-2',name:'生態系',points:['T8-P3','T2-P5']},
+     {no:'2-3',name:'多樣的生態系',points:['T8-P4']},
+   ]},
+   {name:'第3章 生物多樣性與保育',sections:[
+     {no:'3-1',name:'生物多樣性',points:['T8-P5']},
+     {no:'3-2',name:'人類與環境',points:['T8-P6']},
+   ]},
  ]},
  {id:'VX',name:'實驗與探究',tag:'實',sub:'跨冊 · 段考與分科都會考',chapters:[
-   {name:'觀察與測量',points:['T9-P1','T9-P2']},
-   {name:'解剖與構造觀察',points:['T9-P3','T9-P4']},
-   {name:'定性與定量實驗',points:['T9-P5','T9-P6']},
+   {name:'顯微觀察',sections:[
+     {no:'實-1',name:'複式顯微鏡的使用與測量',points:['T9-P1']},
+     {no:'實-2',name:'顯微鏡的觀察實驗',points:['T9-P2']},
+   ]},
+   {name:'解剖與構造觀察',sections:[
+     {no:'實-3',name:'植物花與果實的觀察',points:['T9-P3']},
+     {no:'實-4',name:'動物器官解剖實驗',points:['T9-P4']},
+   ]},
+   {name:'定性與定量實驗',sections:[
+     {no:'實-5',name:'重要測定反應實驗',points:['T9-P5']},
+     {no:'實-6',name:'實驗設計與分析',points:['T9-P6']},
+   ]},
  ]},
 ];
 const PT = {}; TOPICS.forEach(t=>t.points.forEach(p=>PT[p.id]={...p,topic:t.name,tid:t.id}));
@@ -706,7 +792,7 @@ function poolFor(pt){
 const treeOpen=new Set();          // 記住展開了哪幾冊，重繪時不收合
 function renderTree(){
   $('#tree').innerHTML = VOLUMES.map(v=>{
-    const pts=[]; v.chapters.forEach(c=>c.points.forEach(p=>{ if(!pts.includes(p)) pts.push(p); }));
+    const pts=volPoints(v);
     const n = pts.reduce((s,p)=>s+poolFor(p).length,0);
     const on = pts.every(p=>state.scope.has(p));
     const some = pts.some(p=>state.scope.has(p));
@@ -717,7 +803,7 @@ function renderTree(){
       </div>
       <div class="points${treeOpen.has(v.id)?' open':''}" id="pts-${v.id}">
         ${v.chapters.map(c=>{
-          const rows=c.points.filter(p=>PT[p]);
+          const rows=[]; c.sections.forEach(sec=>sec.points.forEach(p=>{ if(PT[p]&&!rows.includes(p)) rows.push(p); }));
           if(!rows.length) return '';
           return `<div class="chp">${c.name}</div>`+rows.map(p=>{
             const cnt=poolFor(p).length, r=rate(p);
@@ -737,8 +823,7 @@ function renderTree(){
   });
   $$('[data-vol]').forEach(c=>c.onchange=()=>{
     const v=VOLUMES.find(x=>x.id===c.dataset.vol);
-    const pts=[]; v.chapters.forEach(ch=>ch.points.forEach(p=>{ if(!pts.includes(p)) pts.push(p); }));
-    pts.forEach(p=>c.checked?state.scope.add(p):state.scope.delete(p));
+    volPoints(v).forEach(p=>c.checked?state.scope.add(p):state.scope.delete(p));
     renderTree(); updatePool();
   });
   $$('[data-pt]').forEach(c=>c.onchange=()=>{
@@ -1004,7 +1089,10 @@ function lessonRow(pt){
     <div class="rt">${right}</div></div>`;
 }
 function volPoints(v){
-  const out=[]; v.chapters.forEach(c=>c.points.forEach(p=>{ if(LByPoint[p]&&!out.includes(p)) out.push(p); }));
+  const out=[];
+  v.chapters.forEach(c=>c.sections.forEach(sec=>sec.points.forEach(p=>{
+    if(LByPoint[p]&&!out.includes(p)) out.push(p);
+  })));
   return out;
 }
 function renderLearn(){
@@ -1021,9 +1109,13 @@ function renderLearn(){
     $('#learnTitle').textContent=v.name;
     $('#learnHint').textContent=`${v.sub}｜共 ${pts.length} 篇講義，已讀 ${done} 篇。`;
     host.innerHTML=v.chapters.map(c=>{
-      const rows=c.points.filter(p=>LByPoint[p]);
-      if(!rows.length) return '';
-      return `<div class="lgrouphd">${c.name}</div>`+rows.map(lessonRow).join('');
+      const body=c.sections.map(sec=>{
+        const rows=sec.points.filter(p=>LByPoint[p]);
+        const hd=`<div class="sechd"><span class="sn">${sec.no}</span>${sec.name}</div>`;
+        if(!rows.length) return hd+`<div class="secempty">講義撰寫中</div>`;
+        return hd+rows.map(lessonRow).join('');
+      }).join('');
+      return `<div class="lgrouphd">${c.name}</div>`+body;
     }).join('');
     host.querySelectorAll('.lrow').forEach(el=>el.onclick=()=>openLesson(el.dataset.pt));
     window.scrollTo(0,0);
