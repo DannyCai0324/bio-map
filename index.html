@@ -247,7 +247,29 @@ textarea{width:100%;min-height:150px;font-family:ui-monospace,SFMono-Regular,Men
 .lfig .svgwrap{background:var(--surface-1);border-radius:var(--r-md);padding:14px 12px;box-shadow:var(--sh-1)}
 .lfig .svgwrap svg{width:100%;height:auto;display:block;
   --fg:var(--ink); --fg2:var(--ink-2); --dim:var(--muted); --hi:var(--accent); --hi2:var(--accent-2);
-  --soft:var(--accent-soft); --rule:var(--line)}
+  --soft:var(--accent-soft); --rule:var(--line);
+  /* 生物語意色：畫構造用，淺／深色各一組 */
+  --c-mem:#c98a3f; --c-mem-f:#f6e7cf;
+  --c-nuc:#7b5ea7; --c-nuc-f:#ece4f6;
+  --c-mito:#cf5b3e; --c-mito-f:#fbe2da;
+  --c-chl:#4f8f4a; --c-chl-f:#dcefd9;
+  --c-wall:#8a7a3f; --c-wall-f:#efe9d2;
+  --c-vac:#5f9cb8; --c-vac-f:#dcedf4;
+  --c-er:#3f8f86;  --c-er-f:#d9ecea;
+  --c-gol:#c78f1e; --c-gol-f:#f7ebcd;
+  --c-lys:#b5487a; --c-lys-f:#f7dfea;
+  --c-cyto:#fffaf2}
+:root[data-theme="dark"] .lfig .svgwrap svg{
+  --c-mem:#e0a869; --c-mem-f:#43331f;
+  --c-nuc:#a98ed0; --c-nuc-f:#2f2740;
+  --c-mito:#e87d5f; --c-mito-f:#43261e;
+  --c-chl:#74b96d; --c-chl-f:#243520;
+  --c-wall:#b5a45f; --c-wall-f:#38321d;
+  --c-vac:#8fc6db; --c-vac-f:#1f3138;
+  --c-er:#5cb5aa;  --c-er-f:#1d3532;
+  --c-gol:#e0b447; --c-gol-f:#3d3218;
+  --c-lys:#d97aa5; --c-lys-f:#3d2130;
+  --c-cyto:#241d18}
 .lfig .svgwrap text{font-family:inherit}
 
 @media(max-width:600px){
