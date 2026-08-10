@@ -340,7 +340,7 @@ textarea{width:100%;min-height:150px;font-family:ui-monospace,SFMono-Regular,Men
 <section id="v-deep" hidden>
   <div class="card">
     <h2>課外補充</h2>
-    <p class="hint">這裡是延伸到課綱以外的內容，不是課內必考。不過學校的考試偶爾會拿這類材料當延伸題或加分題，讀過就多一層底。如果你對某個主題特別有興趣、或想先摸摸大學在學什麼，可以來看看。看不懂很正常，跳過也完全沒關係。</p>
+    <p class="hint">這裡是延伸到課綱以外的內容，不是課內必考。如果你對某個主題特別有興趣、或想先摸摸大學在學什麼，可以來看看。看不懂很正常，跳過也完全沒關係。</p>
     <div id="deepList"></div>
   </div>
 </section>
@@ -1291,7 +1291,7 @@ function openDeep(id){
   $('#deepBody').innerHTML =
     `<div class="dhero"><h2>${a.title}</h2><p class="hk">${a.hook}</p>
      <p class="meta">${a.category}${a.subtitle?' · '+a.subtitle:''} · 約 ${a.minutes} 分鐘</p></div>` +
-    `<div class="dwarn">📖 這篇超出高中課綱的範圍，不是課內必考，但學校的考試有機會拿來當延伸題。看不懂很正常——這裡的目的是讓你知道「往下還有什麼」，不是要你全部學會。</div>` +
+    `<div class="dwarn">📖 這篇超出高中課綱的範圍，不是課內必考。看不懂很正常——這裡的目的是讓你知道「往下還有什麼」，不是要你全部學會。</div>` +
     a.blocks.map(blockHTML).join('');
   $('#deepMeta').textContent = a.related_point ? (PT[a.related_point]||{}).name||'' : '';
   $('#deepToLesson').hidden = !a.related_point;
