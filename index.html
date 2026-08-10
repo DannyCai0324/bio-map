@@ -204,6 +204,24 @@ textarea{width:100%;min-height:150px;font-family:ui-monospace,SFMono-Regular,Men
   margin:22px 0 10px;padding-bottom:7px;border-bottom:2px solid var(--accent)}
 .mixgrp:first-child{margin-top:4px}
 .mixpt{font-size:12px;color:var(--muted);font-weight:400;margin-left:8px}
+.mfig{margin:14px 0 2px}
+.mfig .svgwrap svg{width:100%;height:auto;display:block;
+  --fg:var(--ink); --fg2:var(--ink-2); --dim:var(--muted); --hi:var(--accent); --hi2:var(--accent-2);
+  --soft:var(--accent-soft); --rule:var(--line);
+  --c-mem:#c98a3f; --c-mem-f:#f6e7cf; --c-nuc:#7b5ea7; --c-nuc-f:#ece4f6;
+  --c-mito:#cf5b3e; --c-mito-f:#fbe2da; --c-chl:#4f8f4a; --c-chl-f:#dcefd9;
+  --c-wall:#8a7a3f; --c-wall-f:#efe9d2; --c-vac:#5f9cb8; --c-vac-f:#dcedf4;
+  --c-er:#3f8f86; --c-er-f:#d9ecea; --c-gol:#c78f1e; --c-gol-f:#f7ebcd;
+  --c-lys:#b5487a; --c-lys-f:#f7dfea; --c-thy:#3f7a3a; --c-thy-f:#a9d3a2;
+  --c-cyto:#fffaf2}
+:root[data-theme="dark"] .mfig .svgwrap svg{
+  --c-mem:#e0a869; --c-mem-f:#43331f; --c-nuc:#a98ed0; --c-nuc-f:#2f2740;
+  --c-mito:#e87d5f; --c-mito-f:#43261e; --c-chl:#74b96d; --c-chl-f:#243520;
+  --c-wall:#b5a45f; --c-wall-f:#38321d; --c-vac:#8fc6db; --c-vac-f:#1f3138;
+  --c-er:#5cb5aa; --c-er-f:#1d3532; --c-gol:#e0b447; --c-gol-f:#3d3218;
+  --c-lys:#d97aa5; --c-lys-f:#3d2130; --c-thy:#8ecb86; --c-thy-f:#3c5c36;
+  --c-cyto:#241d18}
+.mfig .svgwrap text{font-family:inherit}
 .cmp .mh{font-weight:800;font-size:13.5px;margin:0 0 12px;color:var(--ink-2);display:flex;gap:7px;align-items:center}
 .cmp table{width:100%;border-collapse:separate;border-spacing:0;font-size:13.5px;min-width:340px}
 .cmp th{background:var(--espresso);color:#fff;font-weight:700;padding:10px 11px;text-align:left;font-size:13px;border:0}
@@ -1228,7 +1246,7 @@ function blockHTML(b){
       <p class="mrule">${b.rule||''}</p>
       <table><thead><tr><th>比較項目</th>${cols.map(c=>`<th>${c}</th>`).join('')}</tr></thead>
       <tbody>${(b.rows||[]).map(r=>`<tr><td>${r[0]}</td>${r.slice(1).map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}</tbody>
-      </table></div>`;
+      </table>${b.svg?`<div class="mfig"><div class="svgwrap">${b.svg}</div></div>`:''}</div>`;
   }
   if(b.type==='compare'){
     const cols=b.cols||['甲','乙'];
@@ -1355,7 +1373,7 @@ function renderMix(){
   let html='';
   Object.entries(g).forEach(([grp,arr])=>{
     html+=`<div class="mixgrp">${grp}<span class="mixpt">${arr.length} 組</span></div>`;
-    arr.forEach(m=>{ html+=blockHTML({type:'mixup',title:m.title,rule:m.rule,cols:m.cols,rows:m.rows}); });
+    arr.forEach(m=>{ html+=blockHTML({type:'mixup',title:m.title,rule:m.rule,cols:m.cols,rows:m.rows,svg:m.svg}); });
   });
   host.innerHTML=html;
 }
@@ -1373,7 +1391,7 @@ fetch('mixups.json', {cache:'no-cache'})
       // 放在「三十秒回顧」之前；沒有回顧就放最後
       let at=blocks.findIndex(b=>b.type==='recap');
       if(at<0) at=blocks.length;
-      blocks.splice(at,0,{type:'mixup',auto:true,title:m.title,rule:m.rule,cols:m.cols,rows:m.rows});
+      blocks.splice(at,0,{type:'mixup',auto:true,title:m.title,rule:m.rule,cols:m.cols,rows:m.rows,svg:m.svg});
     });
     console.log('[別搞混] 已載入 '+ms.length+' 組');
     if(CURVIEW==='mix') renderMix();
