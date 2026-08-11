@@ -205,6 +205,14 @@ textarea{width:100%;min-height:150px;font-family:ui-monospace,SFMono-Regular,Men
 #resetPanel .rop{display:flex;gap:9px;align-items:flex-start;font-size:15px;
   line-height:1.6;margin:0 0 4px;cursor:pointer}
 #resetPanel .rop input{margin-top:4px;flex:none}
+.step{display:flex;gap:14px;padding:18px 0;border-top:1px solid var(--line)}
+.step:first-of-type{border-top:0;padding-top:6px}
+.step .sn{flex:none;width:32px;height:32px;border-radius:999px;background:var(--espresso);color:#fff;
+  display:grid;place-items:center;font-weight:800;font-size:16.1px}
+.step .sb{flex:1;min-width:0}
+.step h3{margin:2px 0 6px;font-size:17.2px}
+.step .hint{margin:0 0 11px}
+#syncIn{width:170px;text-align:center;letter-spacing:.2em;font-weight:800;font-size:21px}
 .codebig{font-size:38px;font-weight:800;letter-spacing:.22em;text-align:center;
   background:var(--espresso);color:#fff;border-radius:var(--r-md);padding:16px 10px;margin:14px 0 8px}
 :root[data-theme="dark"] .codebig{background:var(--accent);color:var(--on-accent)}
@@ -425,6 +433,7 @@ textarea{width:100%;min-height:150px;font-family:ui-monospace,SFMono-Regular,Men
   <h1>翊の生物</h1>
   <span class="sub">依課本冊別 · 51 個要點</span>
   <span class="spacer"></span>
+  <button class="ghost" id="devBtn">⇄ 換裝置</button>
   <button class="ghost" id="theme">◐ 主題</button>
 </header>
 
@@ -513,6 +522,54 @@ textarea{width:100%;min-height:150px;font-family:ui-monospace,SFMono-Regular,Men
     <h2>別搞混</h2>
     <p class="hint">兩個長得很像、每年都有人寫錯的觀念放在一起比。每一組先給一句馬上能用的判準，再列對照表。同一組內容也會出現在對應的講義裡。</p>
     <div id="mixList"></div>
+  </div>
+</section>
+
+
+<!-- ============ DEVICE（換裝置） ============ -->
+<section id="v-device" hidden>
+  <div class="card">
+    <h2>換裝置</h2>
+    <p class="hint">照著三個步驟做就好。同步的內容只有學習紀錄，<b>不含姓名或任何個人資料</b>；同步碼 180 天沒用到會自動失效。</p>
+
+    <div class="step">
+      <div class="sn">1</div>
+      <div class="sb">
+        <h3>在<b>舊裝置</b>：產生同步碼</h3>
+        <p class="hint">進度、錯題本、已讀講義、手寫筆記會整包上傳。</p>
+        <div class="row"><button class="primary" id="syncMake">產生同步碼</button>
+          <button class="ghost" id="syncPush" hidden>更新這組碼</button></div>
+        <div id="syncCode" hidden>
+          <div class="codebig" id="syncCodeTxt"></div>
+          <p class="hint" id="syncCodeSub"></p>
+          <div class="row"><button class="ghost" id="syncCopy">複製</button></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="sn">2</div>
+      <div class="sb">
+        <h3>在<b>新裝置</b>：輸入同步碼</h3>
+        <p class="hint">打開同一個網址，到這一頁輸入六位碼。</p>
+        <div class="row">
+          <input id="syncIn" placeholder="輸入同步碼" maxlength="6" autocapitalize="characters"
+                 autocomplete="off" spellcheck="false">
+          <button class="primary" id="syncGet">取回進度</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="sn">3</div>
+      <div class="sb">
+        <h3>舊裝置不用了：清空這台的紀錄</h3>
+        <p class="hint">只清掉<b>這台裝置</b>的紀錄，不會動到同步碼上的備份——之後還能用同步碼取回。</p>
+        <div class="row"><button class="ghost danger" id="resetProg">清空這台裝置的紀錄</button></div>
+      </div>
+    </div>
+
+    <div class="msg" id="syncMsg"></div>
   </div>
 </section>
 
@@ -611,27 +668,6 @@ textarea{width:100%;min-height:150px;font-family:ui-monospace,SFMono-Regular,Men
     </div>
     <div id="heat"></div>
   </div>
-  <div class="card" id="syncCard">
-    <h2>換裝置：同步碼</h2>
-    <p class="hint">在<b>舊裝置</b>按「產生同步碼」拿到六位數，到<b>新裝置</b>輸入同一組碼，
-      進度、錯題本、已讀講義與手寫筆記就整包帶過去。<br>
-      同步碼只存學習紀錄，<b>不含姓名或任何個人資料</b>；180 天沒用到會自動失效。</p>
-    <div class="row">
-      <button class="primary" id="syncMake">產生同步碼</button>
-      <span class="spacer"></span>
-      <input id="syncIn" placeholder="輸入同步碼" maxlength="6" autocapitalize="characters"
-             autocomplete="off" spellcheck="false" style="width:150px;text-align:center;
-             letter-spacing:.18em;font-weight:800;font-size:19px">
-      <button class="ghost" id="syncGet">取回進度</button>
-    </div>
-    <div id="syncCode" hidden>
-      <div class="codebig" id="syncCodeTxt"></div>
-      <p class="hint" id="syncCodeSub"></p>
-      <div class="row"><button class="ghost" id="syncCopy">複製</button>
-        <button class="ghost" id="syncPush">更新這組碼的內容</button></div>
-    </div>
-    <div class="msg" id="syncMsg"></div>
-  </div>
   <div class="card">
     <h2>進度存檔（備用）</h2>
     <p class="hint">作答紀錄存在<b>這台裝置的瀏覽器</b>裡：關掉再打開還在，網站更新也不會清掉。<br>
@@ -639,27 +675,8 @@ textarea{width:100%;min-height:150px;font-family:ui-monospace,SFMono-Regular,Men
     <div class="row">
       <button class="primary" id="expFile">下載備份</button>
       <button class="ghost" id="impFile">還原備份</button>
-      <button class="ghost danger" id="resetProg">清除紀錄</button>
     </div>
     <input type="file" id="progFile" hidden>
-    <div id="resetPanel" hidden>
-      <p class="rwarn">清除後<b>無法復原</b>。目前這台裝置：<span id="resetNow"></span></p>
-      <div class="row">
-        <label class="rop"><input type="radio" name="rsc" value="all" checked><span>全部清除（答題紀錄＋錯題本＋已讀＋手寫筆記）</span></label>
-      </div>
-      <div class="row">
-        <label class="rop"><input type="radio" name="rsc" value="quiz"><span>只清除答題紀錄與錯題本</span></label>
-      </div>
-      <div class="row">
-        <label class="rop"><input type="radio" name="rsc" value="ink"><span>只清除手寫筆記</span></label>
-      </div>
-      <p class="rwarn">確認請在下面輸入 <b>清除</b> 兩個字：</p>
-      <div class="row">
-        <input id="resetWord" placeholder="輸入「清除」" autocomplete="off" style="width:150px;text-align:center">
-        <button class="primary danger" id="resetGo" disabled>確定清除</button>
-        <button class="ghost" id="resetCancel">取消</button>
-      </div>
-    </div>
     <details style="margin-top:11px">
       <summary class="hint" style="cursor:pointer">改用複製貼上的方式</summary>
       <div class="row" style="margin-top:8px">
@@ -668,6 +685,7 @@ textarea{width:100%;min-height:150px;font-family:ui-monospace,SFMono-Regular,Men
       </div>
       <textarea id="progBox" placeholder="進度 JSON" style="margin-top:11px"></textarea>
     </details>
+    <p class="hint" style="margin-top:12px">要換手機／平板，或想把這台的紀錄清掉？<a href="#" id="toDev">到「換裝置」頁面 →</a></p>
     <div class="msg" id="progMsg"></div>
   </div>
 </section>
@@ -932,7 +950,7 @@ function band(v){ if(v===null) return 'none'; if(v<40)return'crit'; if(v<60)retu
 /* ---------- 視圖切換 ---------- */
 let CURVIEW='learn';
 function show(v){
-  ['learn','lesson','deep','deeparticle','mix','setup','quiz','result','dash','wrong','data'].forEach(x=>{
+  ['learn','lesson','deep','deeparticle','mix','device','setup','quiz','result','dash','wrong','data'].forEach(x=>{
     const el=$('#v-'+x); if(el) el.hidden = (x!==v);
   });
   // lesson 是 learn 的子頁，分頁鈕維持在「學習」高亮
@@ -1288,7 +1306,7 @@ function renderHeat(){
 }
 
 /* ---------- 同步碼（跨裝置） ---------- */
-const SYNC_URL='';   // ← 部署好 Cloudflare Worker 後填入，例如 https://xxx.workers.dev
+const SYNC_URL='https://biomap-sync.1004546.workers.dev';
 function smsg(ok,t){ const e=$('#syncMsg'); e.className='msg '+(ok?'ok':'err'); e.textContent=t; }
 function syncReady(){
   if(SYNC_URL) return true;
@@ -1298,6 +1316,7 @@ function syncReady(){
 let SYNC_LAST=localStorage.getItem('bioDrill.syncCode')||'';
 function showCode(code,at){
   $('#syncCode').hidden=false;
+  const pb=$('#syncPush'); if(pb) pb.hidden=false;
   $('#syncCodeTxt').textContent=code;
   $('#syncCodeSub').textContent='在新裝置輸入這組碼就能取回。'+(at?('　最後更新：'+at.replace('T',' ').slice(0,16)):'');
   SYNC_LAST=code; localStorage.setItem('bioDrill.syncCode',code);
@@ -1332,6 +1351,8 @@ async function syncLoad(){
   }catch(e){ smsg(false,'取回失敗：'+e.message); }
 }
 document.addEventListener('DOMContentLoaded',()=>{
+  const db=$('#devBtn'); if(db) db.onclick=()=>show('device');
+  const td=$('#toDev'); if(td) td.onclick=e=>{ e.preventDefault(); show('device'); };
   const mk=$('#syncMake'); if(mk) mk.onclick=()=>syncSave('');
   const ps=$('#syncPush'); if(ps) ps.onclick=()=>syncSave(SYNC_LAST);
   const gt=$('#syncGet'); if(gt) gt.onclick=syncLoad;
@@ -1342,8 +1363,8 @@ document.addEventListener('DOMContentLoaded',()=>{
   if(inp){ inp.addEventListener('input',()=>{ inp.value=inp.value.toUpperCase().replace(/[^0-9A-Z]/g,''); });
     inp.addEventListener('keydown',e=>{ if(e.key==='Enter'){e.preventDefault();syncLoad();} }); }
   if(SYNC_LAST) showCode(SYNC_LAST);
-  if(!SYNC_URL){ const c=$('#syncCard'); if(c) c.querySelector('.hint').insertAdjacentHTML('beforeend',
-    '<br><b style="color:var(--serious)">（同步服務尚未啟用，暫時請用下面的備份檔）</b>'); }
+  if(!SYNC_URL){ const c=$('#v-device'); if(c) c.querySelector('.hint').insertAdjacentHTML('beforeend',
+    '<br><b style="color:var(--serious)">（同步服務尚未啟用，請改用「熟練度」頁的備份檔）</b>'); }
 });
 
 /* ---------- 進度備份 ---------- */
@@ -1393,32 +1414,17 @@ $('#impProg').onclick=()=>{
     applySnapshot(d); pmsg(true,'已還原：'+digest(d));
   }catch(e){ pmsg(false,'解析失敗：'+e.message); }
 };
-/* 清除紀錄：兩段式確認（先展開面板選範圍，再輸入「清除」兩個字才會生效） */
+/* 清除紀錄：一顆按鈕，按下去確認一次 */
 function inkCount(){ return Object.values(inkData||{}).reduce((s,a)=>s+(a?a.length:0),0); }
 $('#resetProg').onclick=()=>{
-  const pn=$('#resetPanel'); const open=!pn.hidden;
-  if(open){ pn.hidden=true; return; }
-  $('#resetNow').textContent = digest(snapshot())+'　手寫筆跡 '+inkCount()+' 筆';
-  $('#resetWord').value=''; $('#resetGo').disabled=true;
-  pn.hidden=false; pmsg(true,'請先確認要清除的範圍，並輸入「清除」兩個字。');
-  pn.scrollIntoView({behavior:'smooth',block:'center'});
-};
-$('#resetCancel').onclick=()=>{ $('#resetPanel').hidden=true; pmsg(true,'已取消，什麼都沒有動。'); };
-$('#resetWord').addEventListener('input',e=>{
-  $('#resetGo').disabled = e.target.value.trim()!=='清除';
-});
-$('#resetGo').onclick=()=>{
-  if($('#resetWord').value.trim()!=='清除') return;
-  const scope=(document.querySelector('input[name="rsc"]:checked')||{}).value||'all';
-  const label={all:'全部紀錄',quiz:'答題紀錄與錯題本',ink:'手寫筆記'}[scope];
-  if(!confirm('最後確認：要清除「'+label+'」嗎？\n清除後無法復原。')) return;
-  if(scope==='all'){ progress={}; wrongBook=[]; lessonsSeen={}; inkData={}; }
-  else if(scope==='quiz'){ progress={}; wrongBook=[]; }
-  else { inkData={}; }
+  const now=digest(snapshot())+'，手寫筆跡 '+inkCount()+' 筆';
+  const tip=SYNC_LAST ? '\n\n（同步碼 '+SYNC_LAST+' 上的備份不會被清掉，之後還能取回。）'
+                      : '\n\n※ 這台還沒產生過同步碼，清掉就真的沒了。';
+  if(!confirm('要清空這台裝置的紀錄嗎？\n\n目前：'+now+tip)) { smsg(true,'已取消，什麼都沒有動。'); return; }
+  progress={}; wrongBook=[]; lessonsSeen={}; inkData={};
   saveLocal(); renderHeat(); renderTree(); renderLearn(); renderWrong();
   if(typeof inkRedraw==='function' && document.getElementById('ink')) inkRedraw();
-  $('#resetPanel').hidden=true;
-  pmsg(true,'已清除「'+label+'」。'+(SYNC_LAST?'（同步碼 '+SYNC_LAST+' 上的舊備份還在，需要的話可以按「取回進度」救回來）':'')); 
+  smsg(true,'已清空這台裝置的紀錄。');
 };
 
 /* ---------- 錯題本 ---------- */
