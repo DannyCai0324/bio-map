@@ -195,6 +195,13 @@ textarea{width:100%;min-height:150px;font-family:ui-monospace,SFMono-Regular,Men
 .lcard.recap ul{margin:8px 0 0;padding-left:19px}
 .lcard.recap li{margin:6px 0;font-size:16.7px;line-height:1.7}
 /* 對照表 */
+.keybox{background:var(--accent-soft);border-radius:var(--r-md);padding:13px 15px;margin:0 0 14px}
+.keybox h4{margin:0 0 7px;font-size:14.9px;color:var(--accent)}
+.keybox p{margin:0;font-weight:700;line-height:1.75;font-size:16.1px}
+.keybox .ksub{margin-top:6px;font-weight:400;font-size:13.8px;color:var(--ink-2)}
+#stem mark.qk{background:#ffe08a;color:inherit;padding:2px 3px;border-radius:4px;
+  box-shadow:0 1px 0 rgba(0,0,0,.06);box-decoration-break:clone;-webkit-box-decoration-break:clone}
+:root[data-theme="dark"] #stem mark.qk{background:#6a5620;color:#fdf6e6}
 /* 逐選項解析 */
 .eoh{margin:0 0 10px;font-size:15.5px;color:var(--ink-2)}
 .eo{display:flex;gap:11px;padding:12px 13px;border-radius:var(--r-sm);margin:0 0 9px;
@@ -541,6 +548,8 @@ textarea{width:100%;min-height:150px;font-family:ui-monospace,SFMono-Regular,Men
     <div class="opts" id="opts"></div>
     <div id="feedback" hidden>
       <div class="verdict" id="verdict"></div>
+      <div class="keybox" id="keyBox" hidden><h4>🔑 解題關鍵</h4><p id="keyTxt"></p>
+        <p class="ksub" id="keySub">題幹裡標黃的地方，就是決定答案的訊息。</p></div>
       <div id="eoWrap" hidden><h4 class="eoh">逐選項解析</h4><div id="eoList"></div></div>
       <div class="expl" id="explBox"><h4>解析</h4><div id="expl"></div></div>
       <div class="expl trap" id="trapBox"><h4>常見錯因</h4><p id="trap"></p></div>
@@ -1028,6 +1037,35 @@ $('#start').onclick=()=>{
   show('quiz'); renderQ();
 };
 
+
+/* ---------- 解題關鍵與題幹標示 ---------- */
+let QKEY={};
+fetch('qkeys.json',{cache:'no-cache'}).then(r=>r.ok?r.json():null).then(d=>{
+  if(d&&typeof d==='object'){ QKEY=d; console.log('[解題關鍵] 已載入 '+Object.keys(d).length+' 題'); }
+}).catch(()=>{});
+function esc(t){ return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function markStem(stem, marks){
+  const spans=[];
+  (marks||[]).forEach(m=>{
+    const i=stem.indexOf(m);
+    if(i<0) return;
+    if(spans.some(s=>!(i+m.length<=s.a || i>=s.b))) return;   // 重疊就跳過
+    spans.push({a:i,b:i+m.length});
+  });
+  spans.sort((x,y)=>x.a-y.a);
+  let out='',pos=0;
+  spans.forEach(s=>{ out+=esc(stem.slice(pos,s.a))+'<mark class="qk">'+esc(stem.slice(s.a,s.b))+'</mark>'; pos=s.b; });
+  return out+esc(stem.slice(pos));
+}
+function revealKey(q){
+  const k=QKEY[q.id];
+  const box=$('#keyBox');
+  if(k&&k.key){ box.hidden=false; $('#keyTxt').textContent=k.key;
+    $('#keySub').hidden = !(k.marks&&k.marks.length); }
+  else box.hidden=true;
+  if(k&&k.marks&&k.marks.length) $('#stem').innerHTML=markStem(q.stem,k.marks);
+}
+
 /* ---------- 解析逐選項切分（在瀏覽器端做，不動題庫資料） ---------- */
 function splitExpl(q){
   const e=(q.explanation||'').trim(); if(!e) return null;
@@ -1099,6 +1137,7 @@ function renderQ(){
     ${dtag}${q.type==='multi'?'<span class="tag" style="border-color:var(--accent);color:var(--accent)">多選</span>':''}<span class="tag">難度 ${q.difficulty||3}</span>
     ${q.source?`<span class="tag">${q.source}</span>`:''}`;
   $('#stem').textContent=q.stem;
+  $('#keyBox').hidden=true;
   // 圖片：支援 figure（單張）或 figures（多張），值可為 URL 或 data: base64
   const F=$('#figs');
   const figs=[].concat(q.figures||q.figure||[]);
@@ -1154,6 +1193,7 @@ $('#submit').onclick=()=>{
   });
   $('#verdict').className='verdict '+(ok?'ok':'no');
   $('#verdict').textContent = ok?'✓ 答對了':'✗ 答錯了';
+  revealKey(q);
   renderExpl(q);
   if(q.trap){$('#trapBox').hidden=false;$('#trap').textContent=q.trap;} else $('#trapBox').hidden=true;
   $('#feedback').hidden=false; $('#submit').hidden=true;
