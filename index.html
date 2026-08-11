@@ -195,6 +195,56 @@ textarea{width:100%;min-height:150px;font-family:ui-monospace,SFMono-Regular,Men
 .lcard.recap ul{margin:8px 0 0;padding-left:19px}
 .lcard.recap li{margin:6px 0;font-size:16.7px;line-height:1.7}
 /* 對照表 */
+/* 逐選項解析 */
+.eoh{margin:0 0 10px;font-size:15.5px;color:var(--ink-2)}
+.eo{display:flex;gap:11px;padding:12px 13px;border-radius:var(--r-sm);margin:0 0 9px;
+  background:var(--surface-2);border-left:4px solid var(--line)}
+.eo.right{border-left-color:var(--good);background:color-mix(in srgb,var(--good) 7%,var(--surface-2))}
+.eo.wrong{border-left-color:var(--critical);background:color-mix(in srgb,var(--critical) 7%,var(--surface-2))}
+.eo .k{flex:none;width:26px;height:26px;border-radius:8px;display:grid;place-items:center;
+  font-weight:800;font-size:14.4px;background:var(--surface-1);color:var(--ink-2)}
+.eo.right .k{background:var(--good);color:#fff}
+.eo.wrong .k{background:var(--critical);color:#fff}
+.eo .ot{font-weight:700;line-height:1.6;margin:0 0 5px}
+.eo .oe{margin:0;font-size:15px;line-height:1.75;color:var(--ink-2)}
+.eo .mk{font-weight:800;font-size:13.2px;margin-left:7px;letter-spacing:.03em}
+.eo.right .mk{color:var(--good)} .eo.wrong .mk{color:var(--critical)}
+#expl p{margin:0 0 8px;line-height:1.8}
+#expl p:last-child{margin-bottom:0}
+/* 講義頂端工具列與目錄 */
+.ltop{display:flex;align-items:center;gap:10px;margin:0 0 12px;flex-wrap:wrap}
+.ltop .jump{display:inline-flex;align-items:center;gap:6px;font-size:14.4px;color:var(--ink-2)}
+.ltop .jump input{width:62px;padding:7px 9px;text-align:center;font-size:15.5px}
+#toc{background:var(--surface-2);border-radius:var(--r-md);padding:13px 15px;margin:0 0 14px}
+#toc ol{margin:0;padding-left:0;list-style:none}
+#toc li{padding:7px 0;border-bottom:1px solid var(--line);cursor:pointer;font-size:15px;
+  display:flex;gap:11px;align-items:baseline}
+#toc li:last-child{border-bottom:0}
+#toc li:active{opacity:.6}
+#toc .bn{flex:none;min-width:26px;font-weight:800;color:var(--accent);font-variant-numeric:tabular-nums}
+#lessonStage{position:relative}
+#ink{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:3}
+#lessonStage.inking #ink{pointer-events:auto;touch-action:none;cursor:crosshair}
+#inkBar{display:flex;align-items:center;gap:9px;flex-wrap:wrap;background:var(--surface-2);
+  border-radius:var(--r-md);padding:10px 13px;margin:0 0 12px}
+#inkBar .pen{width:28px;height:28px;border-radius:999px;border:2px solid var(--line);padding:0;box-shadow:none}
+#inkBar .pen[data-c="ink1"]{background:#c2562a}
+#inkBar .pen[data-c="ink2"]{background:#2f6fb8}
+#inkBar .pen[data-c="ink3"]{background:#f2d14b}
+#inkBar .pen.on{border-color:var(--ink);transform:scale(1.12)}
+#inkBar .sep{width:1px;height:20px;background:var(--line)}
+#inkBar .hintxt{font-size:13.2px;color:var(--muted)}
+#inkBar .ghost.on{background:var(--espresso);color:#fff}
+.blkwrap{position:relative}
+.blkwrap>.bn{position:absolute;left:-34px;top:2px;width:26px;text-align:right;
+  font-size:13.2px;font-weight:800;color:var(--muted);font-variant-numeric:tabular-nums;user-select:none}
+.blkwrap.hit>.bn{color:var(--accent)}
+.blkwrap.hit{animation:blkflash 1.6s ease-out}
+@keyframes blkflash{0%{background:var(--accent-soft)}100%{background:transparent}}
+@media(max-width:900px){
+  #lessonBody{padding-left:32px}
+  .blkwrap>.bn{left:-30px}
+}
 .cmp{background:var(--surface-2);border-radius:var(--r-md);padding:16px;margin:0 0 17px;overflow-x:auto}
 .cmp.mixup{background:var(--surface-1);border:1px solid var(--line)}
 .cmp.mixup .mh{color:var(--accent)}
@@ -358,8 +408,27 @@ textarea{width:100%;min-height:150px;font-family:ui-monospace,SFMono-Regular,Men
 
 <!-- ============ LESSON（單篇講義） ============ -->
 <section id="v-lesson" hidden>
-  <button class="ghost" id="lessonBack" style="margin-bottom:12px">‹ 返回講義列表</button>
-  <article id="lessonBody"></article>
+  <div class="ltop">
+    <button class="ghost" id="lessonBack">‹ 返回講義列表</button>
+    <span class="spacer"></span>
+    <button class="ghost" id="tocBtn">目錄</button>
+    <span class="jump"><label for="jumpN">跳到第</label>
+      <input id="jumpN" type="number" min="1" inputmode="numeric" placeholder="—"><span>塊</span></span>
+    <button class="ghost" id="inkBtn">✎ 手寫</button>
+  </div>
+  <div id="inkBar" hidden>
+    <button class="pen on" data-c="ink1" title="筆"></button>
+    <button class="pen" data-c="ink2" title="筆"></button>
+    <button class="pen" data-c="ink3" title="螢光筆"></button>
+    <span class="sep"></span>
+    <button class="ghost" id="inkErase">橡皮擦</button>
+    <button class="ghost" id="inkUndo">復原</button>
+    <button class="ghost" id="inkClear">清除本頁</button>
+    <span class="spacer"></span>
+    <span class="hintxt">手指捲動、觸控筆書寫</span>
+  </div>
+  <div id="toc" hidden></div>
+  <div id="lessonStage"><article id="lessonBody"></article><canvas id="ink"></canvas></div>
   <div class="bar">
     <span class="count" id="lessonPt"></span>
     <span class="spacer"></span>
@@ -441,7 +510,8 @@ textarea{width:100%;min-height:150px;font-family:ui-monospace,SFMono-Regular,Men
     <div class="opts" id="opts"></div>
     <div id="feedback" hidden>
       <div class="verdict" id="verdict"></div>
-      <div class="expl"><h4>解析</h4><p id="expl"></p></div>
+      <div id="eoWrap" hidden><h4 class="eoh">逐選項解析</h4><div id="eoList"></div></div>
+      <div class="expl" id="explBox"><h4>解析</h4><div id="expl"></div></div>
       <div class="expl trap" id="trapBox"><h4>常見錯因</h4><p id="trap"></p></div>
     </div>
   </div>
@@ -745,13 +815,16 @@ let session = null;
 // 本機自動存檔（單機瀏覽器，換裝置用匯出/匯入 JSON 搬移）
 let lessonsSeen={};          // pointId -> true（讀過的講義）
 const LS_KEY='bioDrill.v1';
+let inkData={};   // 手寫筆記 {要點:[筆畫]}
 function saveLocal(){
-  try{ localStorage.setItem(LS_KEY, JSON.stringify({progress,wrongBook,lessonsSeen})); }catch(e){}
+  try{ localStorage.setItem(LS_KEY, JSON.stringify({progress,wrongBook,lessonsSeen,ink:inkData})); }catch(e){
+    try{ localStorage.setItem(LS_KEY, JSON.stringify({progress,wrongBook,lessonsSeen})); }catch(e2){}
+  }
 }
 function loadLocal(){
   try{
     const raw=localStorage.getItem(LS_KEY); if(!raw) return;
-    const d=JSON.parse(raw); progress=d.progress||{}; wrongBook=d.wrongBook||[]; lessonsSeen=d.lessonsSeen||{};
+    const d=JSON.parse(raw); progress=d.progress||{}; wrongBook=d.wrongBook||[]; lessonsSeen=d.lessonsSeen||{}; inkData=d.ink||{};
   }catch(e){}
 }
 
@@ -923,6 +996,66 @@ $('#start').onclick=()=>{
   session={qs:pool,i:0,ans:[],picked:null,done:false};
   show('quiz'); renderQ();
 };
+
+/* ---------- 解析逐選項切分（在瀏覽器端做，不動題庫資料） ---------- */
+function splitExpl(q){
+  const e=(q.explanation||'').trim(); if(!e) return null;
+  const n=(q.options||[]).length;
+  const valid=LETTERS.slice(0,n);
+  const re=/(?:^|[。；;！!？?])\s*([A-E])\s*(?=[正錯對])/g;
+  const hits=[]; const seen=new Set(); let m;
+  while((m=re.exec(e))!==null){
+    const ch=m[1]; if(!valid.includes(ch)||seen.has(ch)) continue;
+    seen.add(ch); hits.push({pos:m.index+m[0].indexOf(ch), ch});
+  }
+  if(hits.length < n-1) return null;      // 切不乾淨就不硬切
+  const parts={}; const lead=e.slice(0,hits[0].pos).trim();
+  hits.forEach((h,i)=>{
+    const end = i+1<hits.length ? hits[i+1].pos : e.length;
+    parts[h.ch]=e.slice(h.pos,end).trim().replace(/^[A-E]\s*/,'').replace(/[。；;]\s*$/,'')+'。';
+  });
+  return {lead, parts};
+}
+function renderExpl(q){
+  const ans=(q.answer||[]);
+  const sp=splitExpl(q);
+  const wrap=$('#eoWrap'), list=$('#eoList'), box=$('#explBox');
+  if(sp){
+    list.innerHTML=(q.options||[]).map((o,i)=>{
+      const k=LETTERS[i], right=ans.includes(k);
+      const mk = right?'<span class="mk">正解</span>':'';
+      const txt = sp.parts[k] || '（此選項未單獨說明）';
+      return `<div class="eo ${right?'right':'wrong'}"><span class="k">${k}</span>
+        <div><p class="ot">${o}${mk}</p><p class="oe">${txt}</p></div></div>`;
+    }).join('');
+    wrap.hidden=false;
+    const rest=[sp.lead, q.review_note?('⚠ '+q.review_note):''].filter(Boolean).join('\n');
+    if(rest){ box.hidden=false; $('#expl').innerHTML=paras(rest); $('#explBox').querySelector('h4').textContent='補充說明'; }
+    else box.hidden=true;
+  } else {
+    wrap.hidden=true; box.hidden=false;
+    $('#explBox').querySelector('h4').textContent='解析';
+    // 切不開時：至少把正解標出來、句子分行，並把 (A)(B) 這類字母加粗
+    const head=`正解：${ans.join('、')}　${ans.map(k=>{
+      const i=LETTERS.indexOf(k); return (q.options||[])[i]||'';}).join(' ／ ')}`;
+    const body=(q.review_note?('⚠ '+q.review_note+'\n'):'')+(q.explanation||'（此題尚未填寫解析）');
+    $('#expl').innerHTML=`<p class="ot">${head}</p>`+paras(body);
+  }
+}
+function paras(t){
+  return String(t).split(/\n+/).flatMap(seg=>{
+    // 長段落依句號斷行，短的維持一段
+    const s=seg.trim(); if(!s) return [];
+    if(s.length<70) return [s];
+    const out=[]; let cur='';
+    s.split(/(?<=[。！？])/).forEach(x=>{
+      cur+=x; if(cur.length>=48){ out.push(cur); cur=''; }
+    });
+    if(cur.trim()) out.push(cur);
+    return out;
+  }).map(x=>`<p>${x.replace(/(?<![A-Za-z0-9_\-])([A-E])(?=\s*[正錯對])/g,'<b>$1</b>')}</p>`).join('');
+}
+
 function renderQ(){
   const q=session.qs[session.i];
   session.picked=null; session.done=false;
@@ -990,9 +1123,8 @@ $('#submit').onclick=()=>{
   });
   $('#verdict').className='verdict '+(ok?'ok':'no');
   $('#verdict').textContent = ok?'✓ 答對了':'✗ 答錯了';
-  $('#expl').textContent=q.explanation||'（此題尚未填寫解析）';
+  renderExpl(q);
   if(q.trap){$('#trapBox').hidden=false;$('#trap').textContent=q.trap;} else $('#trapBox').hidden=true;
-  if(q.review_note){ $('#expl').textContent = '⚠ '+q.review_note+'\n\n'+$('#expl').textContent; }
   $('#feedback').hidden=false; $('#submit').hidden=true;
   $('#next').hidden=false; $('#next').textContent = session.i===session.qs.length-1?'看成績':'下一題';
   $('#next').focus();
@@ -1031,7 +1163,7 @@ function renderHeat(){
     }).join('')}</div></div>`).join('');
 }
 /* ---------- 進度備份 ---------- */
-function snapshot(){ return {app:'翊の生物', v:1, at:new Date().toISOString(), progress, wrongBook, lessonsSeen}; }
+function snapshot(){ return {app:'翊の生物', v:1, at:new Date().toISOString(), progress, wrongBook, lessonsSeen, ink:inkData}; }
 function pmsg(ok,t){ $('#progMsg').className='msg '+(ok?'ok':'err'); $('#progMsg').textContent=t; }
 function digest(d){
   const pr=d.progress||{};
@@ -1039,7 +1171,7 @@ function digest(d){
   return `${ans} 題作答 · ${Object.keys(pr).length} 個要點 · ${(d.wrongBook||[]).length} 筆錯題 · ${Object.keys(d.lessonsSeen||{}).length} 篇講義已讀`;
 }
 function applySnapshot(d){
-  progress=d.progress||{}; wrongBook=d.wrongBook||[]; lessonsSeen=d.lessonsSeen||{};
+  progress=d.progress||{}; wrongBook=d.wrongBook||[]; lessonsSeen=d.lessonsSeen||{}; inkData=d.ink||{};
   saveLocal(); renderHeat(); renderTree(); renderLearn(); renderWrong();
 }
 $('#expFile').onclick=()=>{
@@ -1233,6 +1365,151 @@ function renderLearn(){
 }
 $('#learnBack').onclick=()=>goBack();
 
+
+
+/* ---------- 手寫筆記（平板／觸控筆） ---------- */
+const INK_COLORS={ink1:'#c2562a',ink2:'#2f6fb8',ink3:'#f2d14b'};
+const INK_W={ink1:2.6,ink2:2.6,ink3:14};
+let ink={on:false,pen:'ink1',erase:false,drawing:false,cur:null,scrollY0:0,touchY0:0};
+function inkKey(){ return currentLessonPt||''; }
+function inkCanvas(){ return document.getElementById('ink'); }
+function inkResize(){
+  const st=document.getElementById('lessonStage'), c=inkCanvas(); if(!st||!c) return;
+  const w=st.clientWidth, h=st.scrollHeight||st.clientHeight;
+  const dpr=Math.min(window.devicePixelRatio||1,2.5);
+  c.style.height=h+'px';
+  c.width=Math.round(w*dpr); c.height=Math.round(h*dpr);
+  const g=c.getContext('2d'); g.setTransform(dpr,0,0,dpr,0,0);
+  inkRedraw();
+}
+function inkRedraw(){
+  const c=inkCanvas(); if(!c) return;
+  const g=c.getContext('2d'); const W=c.clientWidth;
+  g.clearRect(0,0,c.width,c.height);
+  (inkData[inkKey()]||[]).forEach(st=>drawStroke(g,st,W));
+}
+function drawStroke(g,st,W){
+  if(!st.p||st.p.length<1) return;
+  g.lineCap='round'; g.lineJoin='round';
+  g.strokeStyle=INK_COLORS[st.c]||st.c;
+  g.globalAlpha = st.c==='ink3'?0.42:1;
+  g.lineWidth=(st.w||2.6)*W/1000*1.6;
+  g.beginPath();
+  st.p.forEach((pt,i)=>{ const x=pt[0]*W, y=pt[1]*W;
+    if(i===0) g.moveTo(x,y); else g.lineTo(x,y); });
+  if(st.p.length===1){ const x=st.p[0][0]*W,y=st.p[0][1]*W; g.lineTo(x+0.1,y+0.1); }
+  g.stroke(); g.globalAlpha=1;
+}
+function inkXY(e){
+  const c=inkCanvas(), r=c.getBoundingClientRect(), W=c.clientWidth;
+  return [ (e.clientX-r.left)/W, (e.clientY-r.top)/W ];
+}
+function inkSave(){ saveLocal(); }
+function inkEraseAt(pt){
+  const arr=inkData[inkKey()]||[]; const R=0.018;
+  const before=arr.length;
+  inkData[inkKey()]=arr.filter(st=>!st.p.some(q=>Math.hypot(q[0]-pt[0],q[1]-pt[1])<R));
+  if(inkData[inkKey()].length!==before){ inkRedraw(); inkSave(); }
+}
+function inkBind(){
+  const c=inkCanvas(); if(!c||c.dataset.bound) return; c.dataset.bound='1';
+  c.addEventListener('pointerdown',e=>{
+    if(!ink.on) return;
+    if(e.pointerType==='touch'){        // 手指＝捲動，不畫
+      ink.touchY0=e.clientY; ink.scrollY0=window.scrollY; c.setPointerCapture(e.pointerId); return;
+    }
+    e.preventDefault(); c.setPointerCapture(e.pointerId);
+    const pt=inkXY(e);
+    if(ink.erase){ ink.drawing='erase'; inkEraseAt(pt); return; }
+    ink.drawing=true;
+    ink.cur={c:ink.pen,w:INK_W[ink.pen],p:[pt]};
+    (inkData[inkKey()]=inkData[inkKey()]||[]).push(ink.cur);
+  });
+  c.addEventListener('pointermove',e=>{
+    if(!ink.on) return;
+    if(e.pointerType==='touch'){
+      if(ink.touchY0!=null && e.buttons!==0){ window.scrollTo(0, ink.scrollY0+(ink.touchY0-e.clientY)); }
+      return;
+    }
+    if(!ink.drawing) return;
+    e.preventDefault();
+    const pt=inkXY(e);
+    if(ink.drawing==='erase'){ inkEraseAt(pt); return; }
+    const p=ink.cur.p, last=p[p.length-1];
+    if(Math.hypot(pt[0]-last[0],pt[1]-last[1])<0.0016) return;   // 點太密就略過
+    p.push([+pt[0].toFixed(4),+pt[1].toFixed(4)]);
+    const g=c.getContext('2d'); drawStroke(g,ink.cur,c.clientWidth);
+  });
+  const end=e=>{ if(!ink.on) return; ink.touchY0=null;
+    if(ink.drawing){ ink.drawing=false; ink.cur=null; inkRedraw(); inkSave(); } };
+  c.addEventListener('pointerup',end); c.addEventListener('pointercancel',end);
+}
+function inkToggle(on){
+  ink.on = on===undefined ? !ink.on : on;
+  document.getElementById('lessonStage').classList.toggle('inking', ink.on);
+  document.getElementById('inkBar').hidden=!ink.on;
+  const b=document.getElementById('inkBtn');
+  b.classList.toggle('on', ink.on); b.textContent = ink.on?'✎ 手寫中':'✎ 手寫';
+  if(ink.on){ inkBind(); inkResize(); }
+}
+document.addEventListener('DOMContentLoaded',()=>{
+  const ib=document.getElementById('inkBtn'); if(ib) ib.onclick=()=>inkToggle();
+  document.querySelectorAll('#inkBar .pen').forEach(p=>p.onclick=()=>{
+    ink.pen=p.dataset.c; ink.erase=false;
+    document.querySelectorAll('#inkBar .pen').forEach(x=>x.classList.toggle('on',x===p));
+    document.getElementById('inkErase').classList.remove('on');
+  });
+  const er=document.getElementById('inkErase');
+  if(er) er.onclick=()=>{ ink.erase=!ink.erase; er.classList.toggle('on',ink.erase); };
+  const un=document.getElementById('inkUndo');
+  if(un) un.onclick=()=>{ const a=inkData[inkKey()]; if(a&&a.length){ a.pop(); inkRedraw(); inkSave(); } };
+  const cl=document.getElementById('inkClear');
+  if(cl) cl.onclick=()=>{ if(!confirm('清除這一篇講義上的所有手寫筆記？')) return;
+    inkData[inkKey()]=[]; inkRedraw(); inkSave(); };
+  let rt; window.addEventListener('resize',()=>{ clearTimeout(rt); rt=setTimeout(()=>{ if(ink.on) inkResize(); },200); });
+});
+
+/* ---------- 講義定位：區塊編號、目錄、跳轉 ---------- */
+function blockLabel(b,i){
+  const t = b.title || b.root || '';
+  if(b.type==='mindmap') return '章節架構圖';
+  if(b.type==='compare') return '對照比較：'+(t||'');
+  if(b.type==='mixup')   return '別搞混：'+(t||'');
+  if(b.type==='trap')    return '小心地雷';
+  if(b.type==='key')     return '記起來';
+  if(b.type==='recap')   return '三十秒回顧';
+  if(b.type==='extend')  return '補充資料：'+(t||'');
+  if(b.type==='analogy') return t||'打個比方';
+  if(b.type==='figure')  return '插圖'+(b.caption?('：'+b.caption.slice(0,18)):'');
+  let txt=(b.body||b.text||'').replace(/<[^>]*>/g,'').replace(/[*_`#>]/g,'').replace(/\s+/g,' ').trim();
+  txt=txt.replace(/^[「『（(]+/,'');
+  return (txt.slice(0,22)+(txt.length>22?'…':''))||('第 '+(i+1)+' 塊');
+}
+function renderToc(l){
+  const host=$('#toc');
+  host.innerHTML='<ol>'+l.blocks.map((b,i)=>
+    `<li data-n="${i+1}"><span class="bn">${i+1}</span><span>${blockLabel(b,i)}</span></li>`).join('')+'</ol>';
+  host.querySelectorAll('li').forEach(li=>li.onclick=()=>{ gotoBlock(+li.dataset.n); host.hidden=true; });
+  host.hidden=true;
+  const inp=$('#jumpN'); if(inp){ inp.value=''; inp.max=l.blocks.length; }
+}
+function gotoBlock(n){
+  const el=document.getElementById('blk-'+n); if(!el) return;
+  document.querySelectorAll('.blkwrap.hit').forEach(x=>x.classList.remove('hit'));
+  el.scrollIntoView({behavior:'smooth',block:'start'});
+  void el.offsetWidth; el.classList.add('hit');
+  if(currentLessonPt) history.replaceState(history.state, '', '#'+currentLessonPt+'-'+n);
+}
+document.addEventListener('DOMContentLoaded',()=>{
+  const tb=$('#tocBtn'); if(tb) tb.onclick=()=>{ const t=$('#toc'); t.hidden=!t.hidden; };
+  const jn=$('#jumpN');
+  if(jn){
+    const go=()=>{ const v=parseInt(jn.value,10); if(v>0) gotoBlock(v); };
+    jn.addEventListener('change',go);
+    jn.addEventListener('keydown',e=>{ if(e.key==='Enter'){e.preventDefault();go();jn.blur();} });
+  }
+});
+
 function blockHTML(b){
   if(b.type==='analogy') return `<div class="lcard analogy"><div class="h">${b.icon||'💡'} ${b.title||'打個比方'}</div>${b.body}</div>`;
   if(b.type==='key')     return `<div class="lcard key"><div class="h">🎯 記起來</div>${b.body}</div>`;
@@ -1281,8 +1558,12 @@ function openLesson(pt){
   $('#lessonBody').innerHTML =
     `<div class="lhero"><h2>${l.title}</h2><p class="hk">${l.hook}</p>
      <p class="meta">${p.topic} · ${p.name} · 約 ${l.minutes} 分鐘</p></div>` +
-    l.blocks.map(blockHTML).join('');
+    l.blocks.map((b,i)=>`<div class="blkwrap" id="blk-${i+1}"><span class="bn">${i+1}</span>${blockHTML(b)}</div>`).join('');
+  renderToc(l);
+  setTimeout(()=>{ if(ink.on){ inkBind(); inkResize(); } else inkResize(); },60);
   $('#lessonPt').textContent = `${p.name}`;
+  const hm=(location.hash||'').match(/^#(T\d+-P\d+)-(\d+)$/);
+  if(hm && hm[1]===pt) setTimeout(()=>gotoBlock(+hm[2]), 120);
   // 圖片點擊放大
   $('#lessonBody').querySelectorAll('.lfig img').forEach(im=>im.onclick=()=>{
     im.classList.toggle('zoom'); document.body.classList.toggle('zooming', im.classList.contains('zoom'));
