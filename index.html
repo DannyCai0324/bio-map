@@ -212,7 +212,12 @@ textarea{width:100%;min-height:150px;font-family:ui-monospace,SFMono-Regular,Men
 #expl p{margin:0 0 8px;line-height:1.8}
 #expl p:last-child{margin-bottom:0}
 /* 講義頂端工具列與目錄 */
-.ltop{display:flex;align-items:center;gap:10px;margin:0 0 12px;flex-wrap:wrap}
+.ltop{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:8px;
+  margin:0 0 10px;padding:9px 0;background:var(--page)}
+.ltop::before{content:"";position:absolute;left:-16px;right:-16px;top:0;bottom:0;
+  background:var(--page);box-shadow:0 8px 12px -11px rgba(0,0,0,.5);z-index:-1}
+.ltop .ghost{padding:8px 12px}
+.ltop .lbl{display:inline}
 .ltop .jump{display:inline-flex;align-items:center;gap:6px;font-size:14.4px;color:var(--ink-2)}
 .ltop .jump input{width:62px;padding:7px 9px;text-align:center;font-size:15.5px}
 #toc{background:var(--surface-2);border-radius:var(--r-md);padding:13px 15px;margin:0 0 14px}
@@ -225,13 +230,22 @@ textarea{width:100%;min-height:150px;font-family:ui-monospace,SFMono-Regular,Men
 #lessonStage{position:relative}
 #ink{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:3}
 #lessonStage.inking #ink{pointer-events:auto;touch-action:none;cursor:crosshair}
-#inkBar{display:flex;align-items:center;gap:9px;flex-wrap:wrap;background:var(--surface-2);
-  border-radius:var(--r-md);padding:10px 13px;margin:0 0 12px}
-#inkBar .pen{width:28px;height:28px;border-radius:999px;border:2px solid var(--line);padding:0;box-shadow:none}
-#inkBar .pen[data-c="ink1"]{background:#c2562a}
-#inkBar .pen[data-c="ink2"]{background:#2f6fb8}
-#inkBar .pen[data-c="ink3"]{background:#f2d14b}
-#inkBar .pen.on{border-color:var(--ink);transform:scale(1.12)}
+#inkBar{position:sticky;top:54px;z-index:29;display:flex;align-items:center;gap:8px;
+  background:var(--surface-2);border-radius:var(--r-md);padding:9px 11px;margin:0 0 12px;
+  overflow-x:auto;scrollbar-width:none}
+#inkBar::-webkit-scrollbar{display:none}
+#inkBar>*{flex:none}
+#inkBar .nib{padding:7px 11px;font-size:14.4px;background:var(--surface-1);
+  border:1px solid var(--line);border-radius:999px;color:var(--ink-2);box-shadow:none;font-weight:600}
+#inkBar .nib.on{background:var(--espresso);color:#fff;border-color:var(--espresso)}
+#inkBar .wq{width:34px;height:32px;display:grid;place-items:center;background:var(--surface-1);
+  border:1px solid var(--line);border-radius:10px;box-shadow:none;padding:0}
+#inkBar .wq.on{border-color:var(--ink)}
+#inkBar .wq i{display:block;background:var(--ink-2);border-radius:99px}
+#inkBar input[type=color]{width:34px;height:32px;padding:2px;border:1px solid var(--line);
+  border-radius:10px;background:var(--surface-1);box-shadow:none}
+#inkBar .sw{width:26px;height:26px;border-radius:999px;border:2px solid var(--line);padding:0;box-shadow:none}
+#inkBar .sw.on{border-color:var(--ink);transform:scale(1.14)}
 #inkBar .sep{width:1px;height:20px;background:var(--line)}
 #inkBar .hintxt{font-size:13.2px;color:var(--muted)}
 #inkBar .ghost.on{background:var(--espresso);color:#fff}
@@ -354,6 +368,13 @@ textarea{width:100%;min-height:150px;font-family:ui-monospace,SFMono-Regular,Men
   header .sub{display:none}
 }
 @media(max-width:600px){
+  .ltop{gap:6px}
+  .ltop .lbl{display:none}
+  .ltop .jump input{width:52px}
+  .ltop .ghost{padding:8px 10px;font-size:14.4px}
+  .ltop #lessonBack{padding:8px 9px;font-size:0}
+  .ltop #lessonBack::before{content:"‹ 返回";font-size:14.4px}
+  #inkBar{top:50px}
   .tabs button{font-size:15px;padding:8px 12px}
   .hero{font-size:47.1px}
   .wrap{padding:16px 14px 40px}
@@ -412,20 +433,30 @@ textarea{width:100%;min-height:150px;font-family:ui-monospace,SFMono-Regular,Men
     <button class="ghost" id="lessonBack">‹ 返回講義列表</button>
     <span class="spacer"></span>
     <button class="ghost" id="tocBtn">目錄</button>
-    <span class="jump"><label for="jumpN">跳到第</label>
-      <input id="jumpN" type="number" min="1" inputmode="numeric" placeholder="—"><span>塊</span></span>
+    <span class="jump"><label for="jumpN" class="lbl">跳到第</label>
+      <input id="jumpN" type="number" min="1" inputmode="numeric" placeholder="#"><span class="lbl">塊</span></span>
     <button class="ghost" id="inkBtn">✎ 手寫</button>
   </div>
   <div id="inkBar" hidden>
-    <button class="pen on" data-c="ink1" title="筆"></button>
-    <button class="pen" data-c="ink2" title="筆"></button>
-    <button class="pen" data-c="ink3" title="螢光筆"></button>
+    <button class="nib on" data-t="ball">原子筆</button>
+    <button class="nib" data-t="fountain">鋼筆</button>
+    <button class="nib" data-t="pencil">色鉛筆</button>
+    <button class="nib" data-t="marker">螢光筆</button>
+    <span class="sep"></span>
+    <button class="wq" data-w="1" title="細"><i style="width:16px;height:2px"></i></button>
+    <button class="wq on" data-w="2" title="中"><i style="width:16px;height:4px"></i></button>
+    <button class="wq" data-w="3" title="粗"><i style="width:16px;height:7px"></i></button>
+    <span class="sep"></span>
+    <button class="sw on" data-c="#c2562a" style="background:#c2562a"></button>
+    <button class="sw" data-c="#1c1611" style="background:#1c1611"></button>
+    <button class="sw" data-c="#2f6fb8" style="background:#2f6fb8"></button>
+    <button class="sw" data-c="#2e8b57" style="background:#2e8b57"></button>
+    <button class="sw" data-c="#f2d14b" style="background:#f2d14b"></button>
+    <input type="color" id="inkColor" value="#c2562a" title="自選顏色">
     <span class="sep"></span>
     <button class="ghost" id="inkErase">橡皮擦</button>
     <button class="ghost" id="inkUndo">復原</button>
-    <button class="ghost" id="inkClear">清除本頁</button>
-    <span class="spacer"></span>
-    <span class="hintxt">手指捲動、觸控筆書寫</span>
+    <button class="ghost" id="inkClear">清除</button>
   </div>
   <div id="toc" hidden></div>
   <div id="lessonStage"><article id="lessonBody"></article><canvas id="ink"></canvas></div>
@@ -1368,105 +1399,153 @@ $('#learnBack').onclick=()=>goBack();
 
 
 /* ---------- 手寫筆記（平板／觸控筆） ---------- */
-const INK_COLORS={ink1:'#c2562a',ink2:'#2f6fb8',ink3:'#f2d14b'};
-const INK_W={ink1:2.6,ink2:2.6,ink3:14};
-let ink={on:false,pen:'ink1',erase:false,drawing:false,cur:null,scrollY0:0,touchY0:0};
+const NIB={
+  ball:     {w:[1.8,2.9,4.4], a:1,   cap:'round',  blend:'source-over'},
+  fountain: {w:[2.2,3.6,5.6], a:1,   cap:'round',  blend:'source-over'},
+  pencil:   {w:[2.6,3.8,5.6], a:.30, cap:'round',  blend:'source-over'},
+  marker:   {w:[13,19,27],    a:.32, cap:'butt',   blend:'multiply'}
+};
+const OLD_C={ink1:'#c2562a',ink2:'#2f6fb8',ink3:'#f2d14b'};
+let ink={on:false,t:'ball',c:'#c2562a',w:2,erase:false,drawing:false,cur:null,snap:null,touchY0:null,scrollY0:0};
 function inkKey(){ return currentLessonPt||''; }
 function inkCanvas(){ return document.getElementById('ink'); }
+function normStroke(st){                        // 舊資料相容
+  if(st.t) return st;
+  const c=OLD_C[st.c]||st.c||'#c2562a';
+  return {t:(st.c==='ink3'?'marker':'ball'), c, w:2, p:st.p};
+}
 function inkResize(){
-  const st=document.getElementById('lessonStage'), c=inkCanvas(); if(!st||!c) return;
-  const w=st.clientWidth, h=st.scrollHeight||st.clientHeight;
+  const stg=document.getElementById('lessonStage'), c=inkCanvas(); if(!stg||!c) return;
+  const w=stg.clientWidth, h=stg.scrollHeight||stg.clientHeight;
   const dpr=Math.min(window.devicePixelRatio||1,2.5);
-  c.style.height=h+'px';
-  c.width=Math.round(w*dpr); c.height=Math.round(h*dpr);
-  const g=c.getContext('2d'); g.setTransform(dpr,0,0,dpr,0,0);
+  c.style.height=h+'px'; c.width=Math.round(w*dpr); c.height=Math.round(h*dpr);
+  c.getContext('2d').setTransform(dpr,0,0,dpr,0,0);
   inkRedraw();
 }
 function inkRedraw(){
   const c=inkCanvas(); if(!c) return;
-  const g=c.getContext('2d'); const W=c.clientWidth;
-  g.clearRect(0,0,c.width,c.height);
-  (inkData[inkKey()]||[]).forEach(st=>drawStroke(g,st,W));
+  const g=c.getContext('2d');
+  g.save(); g.setTransform(1,0,0,1,0,0); g.clearRect(0,0,c.width,c.height); g.restore();
+  (inkData[inkKey()]||[]).forEach(st=>drawStroke(g,normStroke(st),c.clientWidth));
 }
+function jit(i,k){ const x=Math.sin((i+1)*12.9898+k*78.233)*43758.5453; return (x-Math.floor(x))-0.5; }
 function drawStroke(g,st,W){
-  if(!st.p||st.p.length<1) return;
-  g.lineCap='round'; g.lineJoin='round';
-  g.strokeStyle=INK_COLORS[st.c]||st.c;
-  g.globalAlpha = st.c==='ink3'?0.42:1;
-  g.lineWidth=(st.w||2.6)*W/1000*1.6;
-  g.beginPath();
-  st.p.forEach((pt,i)=>{ const x=pt[0]*W, y=pt[1]*W;
-    if(i===0) g.moveTo(x,y); else g.lineTo(x,y); });
-  if(st.p.length===1){ const x=st.p[0][0]*W,y=st.p[0][1]*W; g.lineTo(x+0.1,y+0.1); }
-  g.stroke(); g.globalAlpha=1;
+  const p=st.p; if(!p||!p.length) return;
+  const spec=NIB[st.t]||NIB.ball;
+  const base=W/1000*1.65;
+  const lw=spec.w[(st.w||2)-1]*base;
+  g.save();
+  g.lineCap=spec.cap; g.lineJoin='round';
+  g.strokeStyle=st.c; g.globalAlpha=spec.a;
+  g.globalCompositeOperation=spec.blend;
+  if(st.t==='pencil'){
+    for(let k=0;k<3;k++){
+      g.lineWidth=lw*(0.55+k*0.22);
+      g.beginPath();
+      p.forEach((pt,i)=>{
+        const x=pt[0]*W+jit(i,k)*lw*0.55, y=pt[1]*W+jit(i,k+9)*lw*0.55;
+        i?g.lineTo(x,y):g.moveTo(x,y);
+      });
+      g.stroke();
+    }
+  } else if(st.t==='fountain'){
+    for(let i=1;i<p.length;i++){
+      const x0=p[i-1][0]*W,y0=p[i-1][1]*W,x1=p[i][0]*W,y1=p[i][1]*W;
+      const d=Math.hypot(x1-x0,y1-y0);
+      const f=Math.max(0.45,Math.min(1.35,1.35-d/(lw*3.2)));
+      g.lineWidth=lw*f;
+      g.beginPath(); g.moveTo(x0,y0); g.lineTo(x1,y1); g.stroke();
+    }
+    if(p.length===1){ g.lineWidth=lw; g.beginPath();
+      g.arc(p[0][0]*W,p[0][1]*W,lw/2,0,6.284); g.fillStyle=st.c; g.fill(); }
+  } else {
+    g.lineWidth=lw;
+    g.beginPath();
+    p.forEach((pt,i)=>{ const x=pt[0]*W,y=pt[1]*W; i?g.lineTo(x,y):g.moveTo(x,y); });
+    if(p.length===1) g.lineTo(p[0][0]*W+0.1,p[0][1]*W+0.1);
+    g.stroke();
+  }
+  g.restore();
 }
-function inkXY(e){
-  const c=inkCanvas(), r=c.getBoundingClientRect(), W=c.clientWidth;
-  return [ (e.clientX-r.left)/W, (e.clientY-r.top)/W ];
-}
-function inkSave(){ saveLocal(); }
+function inkXY(e){ const c=inkCanvas(), r=c.getBoundingClientRect(), W=c.clientWidth;
+  return [(e.clientX-r.left)/W,(e.clientY-r.top)/W]; }
+function inkSnap(){ const c=inkCanvas(); const g=c.getContext('2d');
+  ink.snap=g.getImageData(0,0,c.width,c.height); }
+function inkRestore(){ if(!ink.snap) return; const c=inkCanvas(); const g=c.getContext('2d');
+  g.save(); g.setTransform(1,0,0,1,0,0); g.putImageData(ink.snap,0,0); g.restore(); }
 function inkEraseAt(pt){
-  const arr=inkData[inkKey()]||[]; const R=0.018;
-  const before=arr.length;
-  inkData[inkKey()]=arr.filter(st=>!st.p.some(q=>Math.hypot(q[0]-pt[0],q[1]-pt[1])<R));
-  if(inkData[inkKey()].length!==before){ inkRedraw(); inkSave(); }
+  const arr=inkData[inkKey()]||[]; const R=0.02;
+  const n=arr.length;
+  inkData[inkKey()]=arr.filter(st=>!(st.p||[]).some(q=>Math.hypot(q[0]-pt[0],q[1]-pt[1])<R));
+  if(inkData[inkKey()].length!==n){ inkRedraw(); saveLocal(); }
 }
 function inkBind(){
   const c=inkCanvas(); if(!c||c.dataset.bound) return; c.dataset.bound='1';
   c.addEventListener('pointerdown',e=>{
     if(!ink.on) return;
-    if(e.pointerType==='touch'){        // 手指＝捲動，不畫
-      ink.touchY0=e.clientY; ink.scrollY0=window.scrollY; c.setPointerCapture(e.pointerId); return;
-    }
+    if(e.pointerType==='touch'){ ink.touchY0=e.clientY; ink.scrollY0=window.scrollY;
+      c.setPointerCapture(e.pointerId); return; }
     e.preventDefault(); c.setPointerCapture(e.pointerId);
     const pt=inkXY(e);
     if(ink.erase){ ink.drawing='erase'; inkEraseAt(pt); return; }
-    ink.drawing=true;
-    ink.cur={c:ink.pen,w:INK_W[ink.pen],p:[pt]};
+    ink.drawing=true; inkSnap();
+    ink.cur={t:ink.t,c:ink.c,w:ink.w,p:[pt]};
     (inkData[inkKey()]=inkData[inkKey()]||[]).push(ink.cur);
   });
   c.addEventListener('pointermove',e=>{
     if(!ink.on) return;
     if(e.pointerType==='touch'){
-      if(ink.touchY0!=null && e.buttons!==0){ window.scrollTo(0, ink.scrollY0+(ink.touchY0-e.clientY)); }
+      if(ink.touchY0!=null&&e.buttons!==0) window.scrollTo(0,ink.scrollY0+(ink.touchY0-e.clientY));
       return;
     }
     if(!ink.drawing) return;
     e.preventDefault();
     const pt=inkXY(e);
     if(ink.drawing==='erase'){ inkEraseAt(pt); return; }
-    const p=ink.cur.p, last=p[p.length-1];
-    if(Math.hypot(pt[0]-last[0],pt[1]-last[1])<0.0016) return;   // 點太密就略過
+    const p=ink.cur.p,last=p[p.length-1];
+    if(Math.hypot(pt[0]-last[0],pt[1]-last[1])<0.0014) return;
     p.push([+pt[0].toFixed(4),+pt[1].toFixed(4)]);
-    const g=c.getContext('2d'); drawStroke(g,ink.cur,c.clientWidth);
+    inkRestore(); drawStroke(c.getContext('2d'),ink.cur,c.clientWidth);
   });
-  const end=e=>{ if(!ink.on) return; ink.touchY0=null;
-    if(ink.drawing){ ink.drawing=false; ink.cur=null; inkRedraw(); inkSave(); } };
+  const end=()=>{ if(!ink.on) return; ink.touchY0=null;
+    if(ink.drawing){ ink.drawing=false; ink.cur=null; ink.snap=null; inkRedraw(); saveLocal(); } };
   c.addEventListener('pointerup',end); c.addEventListener('pointercancel',end);
 }
 function inkToggle(on){
   ink.on = on===undefined ? !ink.on : on;
-  document.getElementById('lessonStage').classList.toggle('inking', ink.on);
+  document.getElementById('lessonStage').classList.toggle('inking',ink.on);
   document.getElementById('inkBar').hidden=!ink.on;
   const b=document.getElementById('inkBtn');
-  b.classList.toggle('on', ink.on); b.textContent = ink.on?'✎ 手寫中':'✎ 手寫';
+  b.classList.toggle('on',ink.on); b.textContent = ink.on?'✎ 手寫中':'✎ 手寫';
   if(ink.on){ inkBind(); inkResize(); }
 }
 document.addEventListener('DOMContentLoaded',()=>{
   const ib=document.getElementById('inkBtn'); if(ib) ib.onclick=()=>inkToggle();
-  document.querySelectorAll('#inkBar .pen').forEach(p=>p.onclick=()=>{
-    ink.pen=p.dataset.c; ink.erase=false;
-    document.querySelectorAll('#inkBar .pen').forEach(x=>x.classList.toggle('on',x===p));
-    document.getElementById('inkErase').classList.remove('on');
+  const off=()=>{ ink.erase=false; document.getElementById('inkErase').classList.remove('on'); };
+  document.querySelectorAll('#inkBar .nib').forEach(n=>n.onclick=()=>{
+    ink.t=n.dataset.t; off();
+    document.querySelectorAll('#inkBar .nib').forEach(x=>x.classList.toggle('on',x===n));
   });
+  document.querySelectorAll('#inkBar .wq').forEach(n=>n.onclick=()=>{
+    ink.w=+n.dataset.w; off();
+    document.querySelectorAll('#inkBar .wq').forEach(x=>x.classList.toggle('on',x===n));
+  });
+  document.querySelectorAll('#inkBar .sw').forEach(n=>n.onclick=()=>{
+    ink.c=n.dataset.c; off();
+    document.getElementById('inkColor').value=n.dataset.c;
+    document.querySelectorAll('#inkBar .sw').forEach(x=>x.classList.toggle('on',x===n));
+  });
+  const ci=document.getElementById('inkColor');
+  if(ci) ci.oninput=()=>{ ink.c=ci.value; off();
+    document.querySelectorAll('#inkBar .sw').forEach(x=>x.classList.remove('on')); };
   const er=document.getElementById('inkErase');
   if(er) er.onclick=()=>{ ink.erase=!ink.erase; er.classList.toggle('on',ink.erase); };
   const un=document.getElementById('inkUndo');
-  if(un) un.onclick=()=>{ const a=inkData[inkKey()]; if(a&&a.length){ a.pop(); inkRedraw(); inkSave(); } };
+  if(un) un.onclick=()=>{ const a=inkData[inkKey()]; if(a&&a.length){a.pop();inkRedraw();saveLocal();} };
   const cl=document.getElementById('inkClear');
   if(cl) cl.onclick=()=>{ if(!confirm('清除這一篇講義上的所有手寫筆記？')) return;
-    inkData[inkKey()]=[]; inkRedraw(); inkSave(); };
-  let rt; window.addEventListener('resize',()=>{ clearTimeout(rt); rt=setTimeout(()=>{ if(ink.on) inkResize(); },200); });
+    inkData[inkKey()]=[]; inkRedraw(); saveLocal(); };
+  let rt; window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>{if(ink.on)inkResize();},200);});
 });
 
 /* ---------- 講義定位：區塊編號、目錄、跳轉 ---------- */
