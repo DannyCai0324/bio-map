@@ -1936,13 +1936,35 @@ fetch('mixups.json', {cache:'no-cache'})
       // 放在「三十秒回顧」之前；沒有回顧就放最後
       let at=blocks.findIndex(b=>b.type==='recap');
       if(at<0) at=blocks.length;
-      blocks.splice(at,0,{type:'mixup',auto:true,title:m.title,rule:m.rule,cols:m.cols,rows:m.rows,svg:m.svg});
+      blocks.splice(at,0,{type:'mixup',auto:true,title:m.title,rule:m.rule,cols:m.cols,rows:m.rows,svg:scopeSVG(m.svg)});
     });
     console.log('[別搞混] 已載入 '+ms.length+' 組');
     if(CURVIEW==='mix') renderMix();
     if(CURVIEW==='lesson'&&currentLessonPt) openLesson(currentLessonPt);
   })
   .catch(()=>{});
+
+/* 圖內 <style> 是整份文件生效的，同一課多張圖若用到同名 class 會互相覆蓋。
+   載入時替每張圖加一個專屬 class，並把圖內每條規則都加上該前綴，讓樣式只作用在自己身上。 */
+let __fgN=0;
+function scopeSVG(sv){
+  if(!sv || sv.indexOf('<style')<0) return sv;
+  const id='fg'+(++__fgN);
+  let out=sv.replace(/<svg\b([^>]*)>/, function(m,attrs){
+    return /class\s*=/.test(attrs)
+      ? '<svg'+attrs.replace(/class\s*=\s*"([^"]*)"/, 'class="$1 '+id+'"')+'>'
+      : '<svg'+attrs+' class="'+id+'">';
+  });
+  out=out.replace(/<style>([\s\S]*?)<\/style>/g, function(m,css){
+    const fixed=css.replace(/([^{}]+)\{([^{}]*)\}/g, function(mm,sel,body){
+      const s=sel.split(',').map(function(x){return x.trim();}).filter(Boolean)
+               .map(function(x){return '.'+id+' '+x;}).join(',');
+      return s+'{'+body+'}';
+    });
+    return '<style>'+fixed+'</style>';
+  });
+  return out;
+}
 
 /* 外掛圖檔：figures.json 與 index.html 分離，繪圖流程可獨立更新 */
 fetch('figures.json', {cache:'no-cache'})
@@ -1954,7 +1976,7 @@ fetch('figures.json', {cache:'no-cache'})
     figs.slice().sort((a,b)=>b.after-a.after).forEach(f=>{
       const l=LByPoint[f.point]; if(!l||!f.svg) return;
       l.blocks.splice(Math.min(f.after+1,l.blocks.length),0,
-        {type:'figure',auto:true,caption:f.caption||'',svg:f.svg});
+        {type:'figure',auto:true,caption:f.caption||'',svg:scopeSVG(f.svg)});
       n++;
     });
     if(n){ console.log('[圖] 已載入 '+n+' 張'); if(CURVIEW==='lesson'&&currentLessonPt) openLesson(currentLessonPt); }
