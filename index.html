@@ -258,6 +258,7 @@ textarea{width:100%;min-height:150px;font-family:ui-monospace,SFMono-Regular,Men
 #toc .bn{flex:none;min-width:26px;font-weight:800;color:var(--accent);font-variant-numeric:tabular-nums}
 #lessonStage{position:relative}
 #ink{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:3}
+#inkLive{position:fixed;left:0;top:0;pointer-events:none;z-index:4;display:none}
 #lessonStage.inking #ink{pointer-events:auto;touch-action:none;cursor:crosshair}
 #inkBar{position:sticky;top:54px;z-index:29;display:flex;align-items:center;gap:8px;
   background:var(--surface-2);border-radius:var(--r-md);padding:9px 11px;margin:0 0 12px;
@@ -489,7 +490,7 @@ textarea{width:100%;min-height:150px;font-family:ui-monospace,SFMono-Regular,Men
     <button class="ghost" id="inkClear">清除</button>
   </div>
   <div id="toc" hidden></div>
-  <div id="lessonStage"><article id="lessonBody"></article><canvas id="ink"></canvas></div>
+  <div id="lessonStage"><article id="lessonBody"></article><canvas id="ink"></canvas></div><canvas id="inkLive"></canvas>
   <div class="bar">
     <span class="count" id="lessonPt"></span>
     <span class="spacer"></span>
@@ -1587,7 +1588,7 @@ const NIB={
   marker:   {w:[13,19,27],    a:.32, cap:'butt',   blend:'multiply'}
 };
 const OLD_C={ink1:'#c2562a',ink2:'#2f6fb8',ink3:'#f2d14b'};
-let ink={on:false,t:'ball',c:'#c2562a',w:2,erase:false,drawing:false,cur:null,snap:null,touchY0:null,scrollY0:0};
+let ink={on:false,t:'ball',c:'#c2562a',w:2,erase:false,drawing:false,cur:null,raf:0,touchY0:null,scrollY0:0};
 function inkKey(){ return currentLessonPt||''; }
 function inkCanvas(){ return document.getElementById('ink'); }
 function normStroke(st){                        // 舊資料相容
@@ -1595,12 +1596,22 @@ function normStroke(st){                        // 舊資料相容
   const c=OLD_C[st.c]||st.c||'#c2562a';
   return {t:(st.c==='ink3'?'marker':'ball'), c, w:2, p:st.p};
 }
+const INK_MAXPX=16000000;   /* iOS Safari 的畫布面積上限，保守值 */
+function inkLiveEl(){ return document.getElementById('inkLive'); }
 function inkResize(){
   const stg=document.getElementById('lessonStage'), c=inkCanvas(); if(!stg||!c) return;
   const w=stg.clientWidth, h=stg.scrollHeight||stg.clientHeight;
-  const dpr=Math.min(window.devicePixelRatio||1,2.5);
+  let dpr=Math.min(window.devicePixelRatio||1,2);
+  if(w*h*dpr*dpr>INK_MAXPX) dpr=Math.max(1,Math.sqrt(INK_MAXPX/(w*h)));
   c.style.height=h+'px'; c.width=Math.round(w*dpr); c.height=Math.round(h*dpr);
   c.getContext('2d').setTransform(dpr,0,0,dpr,0,0);
+  const lv=inkLiveEl();
+  if(lv){
+    const d2=Math.min(window.devicePixelRatio||1,2);
+    lv.style.width=window.innerWidth+'px'; lv.style.height=window.innerHeight+'px';
+    lv.width=Math.round(window.innerWidth*d2); lv.height=Math.round(window.innerHeight*d2);
+    lv.getContext('2d').setTransform(d2,0,0,d2,0,0);
+  }
   inkRedraw();
 }
 function inkRedraw(){
@@ -1650,15 +1661,37 @@ function drawStroke(g,st,W){
 }
 function inkXY(e){ const c=inkCanvas(), r=c.getBoundingClientRect(), W=c.clientWidth;
   return [(e.clientX-r.left)/W,(e.clientY-r.top)/W]; }
-function inkSnap(){ const c=inkCanvas(); const g=c.getContext('2d');
-  ink.snap=g.getImageData(0,0,c.width,c.height); }
-function inkRestore(){ if(!ink.snap) return; const c=inkCanvas(); const g=c.getContext('2d');
-  g.save(); g.setTransform(1,0,0,1,0,0); g.putImageData(ink.snap,0,0); g.restore(); }
+/* 舊版每次筆移動都把整張畫布 putImageData 回去（長講義約 60–100 MB），所以會卡。
+   現在改成：進行中的那一筆畫在「視窗大小」的即時層上，放開筆才併回主畫布。 */
+function inkLiveClear(){
+  const lv=inkLiveEl(); if(!lv) return;
+  const g=lv.getContext('2d');
+  g.save(); g.setTransform(1,0,0,1,0,0); g.clearRect(0,0,lv.width,lv.height); g.restore();
+}
+function inkLiveDraw(){
+  ink.raf=0;
+  const lv=inkLiveEl(), c=inkCanvas(); if(!lv||!c||!ink.cur) return;
+  inkLiveClear();
+  const g=lv.getContext('2d'), r=c.getBoundingClientRect();
+  g.save(); g.translate(r.left,r.top);
+  drawStroke(g,ink.cur,c.clientWidth);
+  g.restore();
+}
+function inkLiveEnd(){
+  if(ink.raf){ cancelAnimationFrame(ink.raf); ink.raf=0; }
+  inkLiveClear();
+  const lv=inkLiveEl(); if(lv){ lv.style.display='none'; lv.style.mixBlendMode='normal'; }
+}
+let __inkSaveT=0;
+function saveLocalSoon(){ clearTimeout(__inkSaveT); __inkSaveT=setTimeout(saveLocal,600); }
+let __inkRedrawRaf=0;
+function inkRedrawSoon(){ if(__inkRedrawRaf) return;
+  __inkRedrawRaf=requestAnimationFrame(()=>{ __inkRedrawRaf=0; inkRedraw(); }); }
 function inkEraseAt(pt){
   const arr=inkData[inkKey()]||[]; const R=0.02;
   const n=arr.length;
   inkData[inkKey()]=arr.filter(st=>!(st.p||[]).some(q=>Math.hypot(q[0]-pt[0],q[1]-pt[1])<R));
-  if(inkData[inkKey()].length!==n){ inkRedraw(); saveLocal(); }
+  if(inkData[inkKey()].length!==n){ inkRedrawSoon(); saveLocalSoon(); }
 }
 function inkBind(){
   const c=inkCanvas(); if(!c||c.dataset.bound) return; c.dataset.bound='1';
@@ -1669,9 +1702,13 @@ function inkBind(){
     e.preventDefault(); c.setPointerCapture(e.pointerId);
     const pt=inkXY(e);
     if(ink.erase){ ink.drawing='erase'; inkEraseAt(pt); return; }
-    ink.drawing=true; inkSnap();
+    ink.drawing=true;
     ink.cur={t:ink.t,c:ink.c,w:ink.w,p:[pt]};
     (inkData[inkKey()]=inkData[inkKey()]||[]).push(ink.cur);
+    const lv=inkLiveEl();
+    if(lv){ lv.style.mixBlendMode=((NIB[ink.t]||NIB.ball).blend==='multiply')?'multiply':'normal';
+            lv.style.display='block'; }
+    inkLiveDraw();
   });
   c.addEventListener('pointermove',e=>{
     if(!ink.on) return;
@@ -1681,15 +1718,18 @@ function inkBind(){
     }
     if(!ink.drawing) return;
     e.preventDefault();
-    const pt=inkXY(e);
-    if(ink.drawing==='erase'){ inkEraseAt(pt); return; }
-    const p=ink.cur.p,last=p[p.length-1];
-    if(Math.hypot(pt[0]-last[0],pt[1]-last[1])<0.0014) return;
-    p.push([+pt[0].toFixed(4),+pt[1].toFixed(4)]);
-    inkRestore(); drawStroke(c.getContext('2d'),ink.cur,c.clientWidth);
+    if(ink.drawing==='erase'){ inkEraseAt(inkXY(e)); return; }
+    const evs=(e.getCoalescedEvents?e.getCoalescedEvents():null)||[e];
+    const p=ink.cur.p; let added=false;
+    for(const ev of evs){
+      const q=inkXY(ev), last=p[p.length-1];
+      if(Math.hypot(q[0]-last[0],q[1]-last[1])<0.0014) continue;
+      p.push([+q[0].toFixed(4),+q[1].toFixed(4)]); added=true;
+    }
+    if(added&&!ink.raf) ink.raf=requestAnimationFrame(inkLiveDraw);
   });
   const end=()=>{ if(!ink.on) return; ink.touchY0=null;
-    if(ink.drawing){ ink.drawing=false; ink.cur=null; ink.snap=null; inkRedraw(); saveLocal(); } };
+    if(ink.drawing){ ink.drawing=false; ink.cur=null; inkLiveEnd(); inkRedraw(); saveLocalSoon(); } };
   c.addEventListener('pointerup',end); c.addEventListener('pointercancel',end);
 }
 function inkToggle(on){
@@ -1698,7 +1738,7 @@ function inkToggle(on){
   document.getElementById('inkBar').hidden=!ink.on;
   const b=document.getElementById('inkBtn');
   b.classList.toggle('on',ink.on); b.textContent = ink.on?'✎ 手寫中':'✎ 手寫';
-  if(ink.on){ inkBind(); inkResize(); }
+  if(ink.on){ inkBind(); inkResize(); } else { inkLiveEnd(); }
 }
 document.addEventListener('DOMContentLoaded',()=>{
   const ib=document.getElementById('inkBtn'); if(ib) ib.onclick=()=>inkToggle();
@@ -1722,7 +1762,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   const er=document.getElementById('inkErase');
   if(er) er.onclick=()=>{ ink.erase=!ink.erase; er.classList.toggle('on',ink.erase); };
   const un=document.getElementById('inkUndo');
-  if(un) un.onclick=()=>{ const a=inkData[inkKey()]; if(a&&a.length){a.pop();inkRedraw();saveLocal();} };
+  if(un) un.onclick=()=>{ const a=inkData[inkKey()]; if(a&&a.length){a.pop();inkRedraw();saveLocalSoon();} };
   const cl=document.getElementById('inkClear');
   if(cl) cl.onclick=()=>{ if(!confirm('清除這一篇講義上的所有手寫筆記？')) return;
     inkData[inkKey()]=[]; inkRedraw(); saveLocal(); };
