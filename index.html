@@ -1216,10 +1216,14 @@ function renderQ(){
   let figHtml = figs.length
     ? figs.map(f=>{
         const src=typeof f==='string'?f:f.src, cap=typeof f==='string'?'':(f.caption||'');
-        return `<figure class="fig"><img src="${src}" alt="${cap||'題目附圖'}" loading="lazy">
-          ${cap?`<figcaption>${cap}</figcaption>`:''}</figure>`;
+        // 值可以是 URL、data: base64，或直接是一段 <svg>…</svg>
+        const inner = /^\s*<svg/i.test(src)
+          ? `<div class="svgwrap">${typeof scopeSVG==='function'?scopeSVG(src):src}</div>`
+          : `<img src="${src}" alt="${cap||'題目附圖'}" loading="lazy">`;
+        return `<figure class="fig">${inner}${cap?`<figcaption>${cap}</figcaption>`:''}</figure>`;
       }).join('') : '';
   if(q.fig_note) figHtml += `<p class="fignote">🖼 ${q.fig_note}</p>`;
+  if(QFIG.note.has(q.id)) figHtml += `<p class="fignote">🖼 ${QFIG.noteText}</p>`;
   F.innerHTML = figHtml;
   F.hidden = !figHtml;
   F.querySelectorAll('img').forEach(im=>im.onclick=()=>{
@@ -1935,6 +1939,9 @@ $('#deepBack').onclick=()=>goBack();
 $('#deepToLesson').onclick=()=>{ if(currentDeep&&currentDeep.related_point) openLesson(currentDeep.related_point); };
 
 /* ---------- 啟動 ---------- */
+/* 題幹提到圖、但題庫沒有附圖的題目：hidden 的不進出題池，note 的只加一行提示。
+   實際名單放在 qfigs.json，載入後才套用。 */
+let QFIG={hidden:new Map(), note:new Set(), noteText:''};
 QUESTIONS = window.__SEED__ || [];
 loadLocal(); indexLessons(); applyMode(); renderModes(); renderTree(); updatePool(); show('learn');
 </script>
@@ -2005,6 +2012,24 @@ function scopeSVG(sv){
   });
   return out;
 }
+
+/* 缺圖題目處理表：把「題幹說有圖、但沒有圖」的題目擋在出題池外 */
+fetch('qfigs.json', {cache:'no-cache'})
+  .then(r=>r.ok?r.json():null)
+  .then(d=>{
+    if(!d) return;
+    QFIG.hidden = new Map(Object.entries(d.hidden||{}));
+    QFIG.note   = new Set(d.noteIds||[]);
+    QFIG.noteText = d.noteText||'';
+    if(QFIG.hidden.size){
+      const before=QUESTIONS.length;
+      QUESTIONS = QUESTIONS.filter(q=>!QFIG.hidden.has(q.id));
+      wrongBook = wrongBook.filter(w=>!QFIG.hidden.has(w.qid));
+      console.log('[缺圖] 已從出題池移除 '+(before-QUESTIONS.length)+' 題（'+before+' → '+QUESTIONS.length+'）');
+      renderTree(); updatePool(); renderWrong(); renderHeat();
+    }
+  })
+  .catch(()=>{});
 
 /* 外掛圖檔：figures.json 與 index.html 分離，繪圖流程可獨立更新 */
 fetch('figures.json', {cache:'no-cache'})

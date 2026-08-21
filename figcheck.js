@@ -12,9 +12,14 @@
   同一個要點的圖會放在同一頁渲染，和線上一致。
 */
 const fs=require('fs'), path=require('path'), os=require('os');
-const PW='/home/claude/.npm-global/lib/node_modules/playwright';
-const CHROME='/opt/pw-browsers/chromium-1194/chrome-linux/chrome';
-const {chromium}=require(PW);
+// 路徑可用環境變數覆蓋，跨機器不必改檔：
+//   FIGCHECK_PW      playwright 模組路徑（預設先試一般 require('playwright')）
+//   FIGCHECK_CHROME  chrome/chromium 執行檔路徑（不設就用 playwright 內建下載的）
+const PW=process.env.FIGCHECK_PW||'playwright';
+const CHROME=process.env.FIGCHECK_CHROME||undefined;
+let chromium;
+try{ chromium=require(PW).chromium; }
+catch(e){ chromium=require('/home/claude/.npm-global/lib/node_modules/playwright').chromium; }
 
 const figFile=process.argv[2]||'figures.json';
 const htmlFile=process.argv[3]||'index.html';
@@ -40,8 +45,35 @@ for(const pt of Object.keys(byPoint)){
   }
 }
 
+// ── 靜態檢查：用到的 class 必須有定義（或該元素自帶 fill/stroke 等呈現屬性）──
+// 少了一條規則，元素會掉回 SVG 預設值（fill 黑、stroke 無），
+// 在暗色主題往往直接看不見，而幾何檢查完全抓不到。
+let classProblems=0;
+figs.forEach((f,i)=>{
+  const sv=f.svg||'';
+  const defined=new Set();
+  (sv.match(/<style>[\s\S]*?<\/style>/g)||[]).forEach(blk=>{
+    let m, re=/\.([A-Za-z][\w-]*)\s*\{/g;
+    while((m=re.exec(blk))) defined.add(m[1]);
+  });
+  const re=/<([a-zA-Z]+)\b([^>]*)\bclass="([^"]+)"([^>]*)>/g;
+  let m;
+  while((m=re.exec(sv))){
+    const attrs=(m[2]||'')+(m[4]||'');
+    const selfStyled=/\b(fill|stroke|font-size|opacity|style)=/.test(attrs);
+    m[3].split(/\s+/).filter(Boolean).forEach(c=>{
+      if(!defined.has(c)&&!selfStyled){
+        console.log(`  第 ${i} 張（${f.point} @${f.after}）：<${m[1]} class="${c}"> 沒有對應的樣式規則，會掉回 SVG 預設值（黑色／無線條）`);
+        classProblems++;
+      }
+    });
+  }
+});
+if(classProblems) console.log(`\n【未定義的 class】共 ${classProblems} 處 —— 這類問題渲染出來才看得到，務必修掉。\n`);
+else console.log('【未定義的 class】0 處');
+
 (async()=>{
-  const br=await chromium.launch({executablePath:CHROME});
+  const br=await chromium.launch(CHROME?{executablePath:CHROME}:{});
   const p=await br.newPage({viewport:{width:1000,height:1400},deviceScaleFactor:1});
   let total=0;
   for(const [pt,theme,fn] of pages){
